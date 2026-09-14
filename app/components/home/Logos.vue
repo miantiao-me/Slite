@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import { Container, Database } from '@lucide/vue'
-</script>
-
 <template>
   <section
     class="
@@ -12,32 +8,38 @@ import { Container, Database } from '@lucide/vue'
     <div class="mx-auto max-w-6xl px-6">
       <div
         class="
-          mx-auto flex max-w-3xl flex-col gap-5 border-y py-5
-          sm:flex-row sm:items-center sm:justify-between
+          mx-auto grid max-w-3xl grid-cols-2 items-center gap-4
+          sm:grid-cols-3 sm:gap-10
+          md:gap-16
         "
       >
-        <p class="text-sm font-medium text-muted-foreground">
-          {{ $t('home.logos.title') }}
-        </p>
-        <div
+        <img
           class="
-            grid grid-cols-2 gap-3
-            sm:min-w-80
+            col-span-full h-auto w-full min-w-0
+            sm:col-span-1
           "
+          alt="Nuxt.js"
+          src="@/assets/images/nuxtjs.png"
+          fetchpriority="high"
+          width="1256"
+          height="632"
         >
-          <div
-            class="flex items-center gap-2 rounded-lg border bg-card px-4 py-3"
-          >
-            <Container aria-hidden="true" class="size-4 text-muted-foreground" />
-            <span class="text-sm font-medium">Docker</span>
-          </div>
-          <div
-            class="flex items-center gap-2 rounded-lg border bg-card px-4 py-3"
-          >
-            <Database aria-hidden="true" class="size-4 text-muted-foreground" />
-            <span class="text-sm font-medium">SQLite</span>
-          </div>
-        </div>
+        <img
+          class="h-auto w-full min-w-0"
+          alt="SQLite"
+          src="@/assets/images/sqlite.png"
+          fetchpriority="high"
+          width="1768"
+          height="890"
+        >
+        <img
+          class="h-auto w-full min-w-0"
+          alt="DuckDB"
+          src="@/assets/images/duckdb.png"
+          fetchpriority="high"
+          width="1768"
+          height="890"
+        >
       </div>
     </div>
   </section>

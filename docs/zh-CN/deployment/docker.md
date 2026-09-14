@@ -47,7 +47,14 @@ docker compose logs -f
 
 请使用 Node.js 24 或更高版本。SQLite 使用内置的 `node:sqlite` 模块，而 DuckDB 是原生模块：依赖项应在镜像内部针对目标运行时、操作系统和架构进行安装，不要直接将宿主机的 `node_modules` 复制进去。
 
-示例 Compose 配置将宿主机端口 `5483` 映射至容器端口 `5483`，并将具名卷 `slite-data` 挂载到 `/data`。若使用宿主机目录绑定挂载（bind mount），请确保该目录位于 Docker 构建上下文之外，或在 `.dockerignore` 中排除整个目录；仅排除数据库文件无法防止上传文件和备份被复制进构建产物。
+示例 Compose 配置将宿主机端口 `5483` 映射至容器端口 `5483`，并将具名卷 `slite-data` 挂载到 `/data`。宿主机目录绑定挂载（bind mount）会保留宿主机属主，因此启动前需先创建目录并授予容器用户写权限（若源目录不存在，Docker 会以 `root` 身份自动创建，容器无法写入并会在启动时报 `unable to open database file`）：
+
+```sh
+mkdir -p /srv/slite
+sudo chown -R 5483:5483 /srv/slite
+```
+
+同时确保该目录位于 Docker 构建上下文之外，或在 `.dockerignore` 中排除整个目录；仅排除数据库文件无法防止上传文件和备份被复制进构建产物。
 
 自行构建镜像时，可通过 `DBIP_VERSION=YYYY-MM` 参数指定特定月份的 [DB-IP](https://db-ip.com) City Lite 版本：
 

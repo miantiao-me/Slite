@@ -47,7 +47,14 @@ docker compose logs -f
 
 Use Node.js 24 or newer. SQLite uses the built-in `node:sqlite` module, while DuckDB is a native module: install dependencies inside the image for its runtime, operating system, and architecture rather than copying host `node_modules`.
 
-The supplied Compose configuration maps host port `5483` to container port `5483` and mounts the named volume `slite-data` at `/data`. For a custom host bind mount, keep its directory outside the Docker build context or exclude the entire directory in `.dockerignore`; excluding database files alone does not protect uploads and backups.
+The supplied Compose configuration maps host port `5483` to container port `5483` and mounts the named volume `slite-data` at `/data`. A custom host bind mount keeps the host directory's ownership, so create it and grant the container user write access before starting (Docker creates a missing source directory as `root`, which the container cannot write and which fails startup with `unable to open database file`):
+
+```sh
+mkdir -p /srv/slite
+sudo chown -R 5483:5483 /srv/slite
+```
+
+Keep a custom bind-mount directory outside the Docker build context or exclude the entire directory in `.dockerignore`; excluding database files alone does not protect uploads and backups.
 
 When you build the image yourself, pass `DBIP_VERSION=YYYY-MM` to pin a specific [DB-IP](https://db-ip.com) City Lite release:
 
