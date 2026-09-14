@@ -35,7 +35,7 @@ RUN install -d -m 0755 -o 5483 -g 5483 /data-root && touch /data-root/.keep
 FROM gcr.io/distroless/nodejs24-debian13:nonroot AS runtime
 
 LABEL org.opencontainers.image.title="Slite" \
-      org.opencontainers.image.description="Self-hosted link shortener with analytics" \
+      org.opencontainers.image.description="A Simple, Self-Hosted Link Shortener with Analytics." \
       org.opencontainers.image.source="https://github.com/miantiao-me/Slite" \
       org.opencontainers.image.licenses="AGPL-3.0-only"
 

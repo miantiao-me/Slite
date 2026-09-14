@@ -1,6 +1,6 @@
 # ⚡ Slite
 
-**A Simple / Speedy / Secure Link Shortener with Analytics, 100% self-hosted.**
+**A Simple, Self-Hosted Link Shortener with Analytics.**
 
 [Documentation](docs/index.md) · [Docker deployment](docs/deployment/docker.md) · [API Reference](docs/api/index.md)
 

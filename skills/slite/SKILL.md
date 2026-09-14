@@ -7,7 +7,7 @@ description: |
 
 # Slite API
 
-Slite is a self-hosted link shortener: one Node.js process with authoritative SQLite storage, a rebuildable unstorage memory link cache, DuckDB analytics, and unstorage filesystem uploads. Manage links through its REST API.
+Slite is a simple, self-hosted link shortener with analytics: one Node.js process with authoritative SQLite storage, a rebuildable unstorage memory link cache, DuckDB analytics, and unstorage filesystem uploads. Manage links through its REST API.
 
 ## Authentication
 

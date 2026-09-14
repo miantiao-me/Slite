@@ -154,7 +154,7 @@ export default defineNuxtConfig({
       production: 'runtime',
       meta: {
         title: 'Slite API',
-        description: 'A self-hosted link shortener with analytics.\n\n[Return to this instance](/)',
+        description: 'A Simple, Self-Hosted Link Shortener with Analytics.\n\n[Return to this instance](/)',
       },
       route: '/_docs/openapi.json',
       ui: {
