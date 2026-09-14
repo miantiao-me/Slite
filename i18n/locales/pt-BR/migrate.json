@@ -1,37 +1,8 @@
 {
   "migrate": {
-    "d1": {
-      "title": "Migração de KV para D1",
-      "description": "Copie os links do Workers KV para o D1 preservando os registros existentes.",
-      "status_title": "Status da migração",
-      "status_pending": "A migração não foi concluída.",
-      "status_completed": "Migração concluída.",
-      "completed_at": "Concluída em {date}",
-      "run_again": "Executar novamente",
-      "running": "Migrando…",
-      "success": "Migração concluída com sucesso.",
-      "failed": "Falha na migração",
-      "scanned": "Verificados",
-      "inserted": "Inseridos",
-      "skipped": "Ignorados",
-      "expired": "Expirados",
-      "failed_count": "Falhas",
-      "no_marker": "Nenhum marcador de conclusão encontrado."
-    },
-    "access_export": {
-      "title": "Exportar dados de acesso",
-      "description": "Baixe as estatísticas de acesso como um arquivo CSV",
-      "date_range": "Intervalo de datas",
-      "slug_label": "Filtro de slug",
-      "slug_description": "Deixe em branco para exportar todos os slugs.",
-      "button": "Exportar CSV",
-      "exporting": "Exportando...",
-      "success": "Exportação concluída",
-      "failed": "Falha na exportação"
-    },
     "backup": {
       "title": "Backup manual",
-      "description": "Acione um backup manual de todos os links para o bucket R2 configurado",
+      "description": "Crie um backup manual de todos os links no armazenamento local",
       "button": "Iniciar backup",
       "backing_up": "Fazendo backup...",
       "success": "Backup realizado com sucesso",
@@ -65,10 +36,21 @@
       },
       "errors": {
         "invalid_json": "Arquivo JSON inválido",
-        "invalid_format": "Formato de arquivo inválido. Por favor, use um arquivo exportado do Sink.",
+        "invalid_format": "Formato de arquivo inválido. Por favor, use um arquivo exportado do Slite.",
         "parse_error": "Falha ao analisar o arquivo",
         "batch_failed": "Este lote de importação falhou."
       }
+    },
+    "access_export": {
+      "title": "Exportar analytics",
+      "description": "Baixe as analytics dos links como arquivo CSV",
+      "date_range": "Intervalo de datas",
+      "slug_label": "Filtro de slug",
+      "slug_description": "Deixe em branco para exportar todos os slugs.",
+      "button": "Exportar CSV",
+      "exporting": "Exportando...",
+      "success": "Exportação concluída",
+      "failed": "Falha na exportação"
     }
   }
 }

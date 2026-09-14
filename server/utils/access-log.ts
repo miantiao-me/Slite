@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { randomUUID } from 'node:crypto'
 import { parseAcceptLanguage } from 'intl-parse-accept-language'
 import { UAParser } from 'ua-parser-js'
 import {
@@ -12,7 +13,9 @@ import {
   Vehicles,
 } from 'ua-parser-js/extensions'
 import { parseURL } from 'ufo'
-import { getFlag } from '#shared/utils/flag'
+import { runAnalytics } from '../database/analytics'
+import { lookupGeo } from '../services/geo'
+import { requestClientIp } from './client-ip'
 
 function toBlobNumber(blob: string) {
   return +blob.replace(/\D/g, '')
@@ -34,7 +37,6 @@ export const blobsMap = {
   blob13: 'browserType',
   blob14: 'device',
   blob15: 'deviceType',
-  blob16: 'COLO',
 } as const
 
 export const doublesMap = {
@@ -81,43 +83,8 @@ export function logs2blobs(logs: LogsMap) {
     .map(key => String(logs[blobsMap[key] as LogsKey] || ''))
 }
 
-export function blobs2logs(blobs: string[]) {
-  const logsList = Object.keys(blobsMap)
-
-  return blobs.reduce((logs, blob, i) => {
-    const key = blobsMap[logsList[i] as BlobsKey]
-    logs[key] = blob
-    return logs
-  }, {} as Partial<LogsMap>)
-}
-
-export function logs2doubles(logs: LogsMap) {
-  return (Object.keys(doublesMap) as DoublesKey[])
-    .sort((a, b) => toBlobNumber(a) - toBlobNumber(b))
-    .map(key => Number(logs[doublesMap[key] as LogsKey] || 0))
-}
-
-export function doubles2logs(doubles: number[]) {
-  const logsList = Object.keys(doublesMap)
-
-  return doubles.reduce((logs, double, i) => {
-    const key = doublesMap[logsList[i] as DoublesKey]
-    logs[key] = double
-    return logs
-  }, {} as Partial<LogsMap>)
-}
-
-function getCountryName(country?: string): string {
-  try {
-    return new Intl.DisplayNames(['en'], { type: 'region' }).of(country || 'WD') || 'Worldwide'
-  }
-  catch {
-    return 'Worldwide'
-  }
-}
-
 export function collectAccessLog(event: H3Event): AccessLogResult | undefined {
-  const ip = getHeader(event, 'cf-connecting-ip') || getHeader(event, 'x-real-ip') || getRequestIP(event, { xForwardedFor: true })
+  const ip = requestClientIp(event)
 
   const { host: referer } = parseURL(getHeader(event, 'referer'))
 
@@ -134,12 +101,9 @@ export function collectAccessLog(event: H3Event): AccessLogResult | undefined {
     device: [ExtraDevices.device || []].flat(),
   })).getResult()
 
-  const { cloudflare } = event.context
-  const { request: { cf } } = cloudflare
   const link = event.context.link || {}
 
-  const isBot = cf?.botManagement?.verifiedBot
-    || ['crawler', 'fetcher'].includes(uaInfo?.browser?.type || '')
+  const isBot = ['crawler', 'fetcher'].includes(uaInfo?.browser?.type || '')
     || ['spider', 'bot'].includes(uaInfo?.browser?.name?.toLowerCase() || '')
 
   const { disableBotAccessLog } = useRuntimeConfig(event)
@@ -148,36 +112,34 @@ export function collectAccessLog(event: H3Event): AccessLogResult | undefined {
     return
   }
 
-  const countryName = getCountryName(cf?.country)
+  const location = lookupGeo(ip)
+
   const logs = {
     url: link.url,
     slug: link.slug,
     ua: userAgent,
     ip,
     referer,
-    country: cf?.country,
-    region: `${getFlag(cf?.country)} ${[cf?.region, countryName].filter(Boolean).join(',')}`,
-    city: `${getFlag(cf?.country)} ${[cf?.city, countryName].filter(Boolean).join(',')}`,
-    timezone: cf?.timezone,
+    country: location?.country ?? '',
+    region: location?.region ?? '',
+    city: location?.city ?? '',
+    timezone: '',
     language,
     os: uaInfo?.os?.name,
     browser: uaInfo?.browser?.name,
     browserType: uaInfo?.browser?.type,
     device: uaInfo?.device?.model,
     deviceType: uaInfo?.device?.type,
-    COLO: cf?.colo,
-
-    // For RealTime Globe
-    latitude: Number(cf?.latitude || getHeader(event, 'cf-iplatitude') || 0),
-    longitude: Number(cf?.longitude || getHeader(event, 'cf-iplongitude') || 0),
+    latitude: location?.latitude ?? undefined,
+    longitude: location?.longitude ?? undefined,
   }
 
   return {
     logs,
     click: {
-      country: cf?.country || '',
-      region: cf?.region || '',
-      city: cf?.city || '',
+      country: location?.country ?? '',
+      region: location?.region ?? '',
+      city: location?.city ?? '',
       device: uaInfo?.device?.type || uaInfo?.device?.model || '',
       browser: uaInfo?.browser?.name || '',
       os: uaInfo?.os?.name || '',
@@ -186,22 +148,12 @@ export function collectAccessLog(event: H3Event): AccessLogResult | undefined {
   }
 }
 
-export function writeAccessLog(event: H3Event, accessLogs: LogsMap): void {
-  const { cloudflare } = event.context
+export async function writeAccessLog(event: H3Event, accessLogs: LogsMap): Promise<void> {
   const link = event.context.link || {}
-
-  if (process.env.NODE_ENV === 'production') {
-    const analytics = cloudflare.env.ANALYTICS
-    if (!analytics)
-      return
-
-    analytics.writeDataPoint({
-      indexes: [link.id], // only one index
-      blobs: logs2blobs(accessLogs),
-      doubles: logs2doubles(accessLogs),
-    })
-    return
-  }
-
-  console.log('access logs:', accessLogs)
+  // Name the columns so the legacy blob16 column keeps its default value.
+  const columns = [...Object.keys(blobsMap), ...Object.keys(doublesMap)]
+  await runAnalytics(
+    `INSERT INTO access_events (event_id, index1, timestamp, ${columns.join(', ')}) VALUES (?, ?, to_timestamp(?), ${columns.map(() => '?').join(', ')})`,
+    [randomUUID(), String(link.id || ''), Date.now() / 1000, ...logs2blobs(accessLogs), accessLogs.latitude ?? null, accessLogs.longitude ?? null],
+  )
 }

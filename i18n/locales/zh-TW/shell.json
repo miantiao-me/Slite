@@ -17,11 +17,11 @@
     "links": {
       "documentation": "文件",
       "api_reference": "API 參考",
-      "documentation_aria_label": "開啟 Sink 文件（在新分頁中開啟）",
+      "documentation_aria_label": "開啟 Slite 文件（在新分頁中開啟）",
       "resources_aria_label": "資源",
       "skip_to_content": "跳到主要內容",
       "home_aria_label": "首頁",
-      "github_aria_label": "GitHub 上的 Sink"
+      "github_aria_label": "GitHub 上的 Slite"
     }
   },
   "nav": {

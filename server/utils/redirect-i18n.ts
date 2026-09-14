@@ -28,7 +28,7 @@ const REDIRECT_LOCALES = [
 export type RedirectLocale = typeof REDIRECT_LOCALES[number]
 
 const DEFAULT_REDIRECT_LOCALE = 'en-US' satisfies RedirectLocale
-const REDIRECT_LOCALE_COOKIE = 'sink_i18n_redirected'
+const REDIRECT_LOCALE_COOKIE = 'slite_i18n_redirected'
 
 export const REDIRECT_TRANSLATIONS = {
   'de-DE': {

@@ -1,6 +1,7 @@
 defineRouteMeta({
   openAPI: {
     description: 'Verify the current authentication method',
+    security: [{ bearerAuth: [] }],
     responses: {
       200: {
         description: 'The authentication credentials are valid',
@@ -33,14 +34,13 @@ export default eventHandler((event) => {
     })
   }
 
-  const { cfAccessTeamDomain, cfAccessAud } = useRuntimeConfig(event)
-
   return {
-    name: 'Sink',
-    url: 'https://sink.cool',
+    name: 'Slite',
+    url: requestOrigin(event),
     authMethod,
     userID,
     userEmail,
-    accessEnabled: isCloudflareAccessConfigured(cfAccessTeamDomain, cfAccessAud),
+    // Kept for Sink API compatibility; Slite has no Cloudflare Access.
+    accessEnabled: false,
   }
 })

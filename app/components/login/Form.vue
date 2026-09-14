@@ -97,7 +97,7 @@ async function handleSubmit() {
         {{ $t('login.preview_token') }}
         <code
           class="rounded-md bg-muted px-1.5 py-0.5 font-mono text-foreground"
-        >SinkCool</code>
+        >SliteCool</code>
       </AlertDescription>
     </Alert>
 

@@ -15,8 +15,8 @@
         "description": "Überwache Link-Analysen und sammle aufschlussreiche Statistiken"
       },
       "serverless": {
-        "title": "Serverless",
-        "description": "Deployment ohne herkömmliche Server"
+        "title": "Self-hosted",
+        "description": "Betreibe Slite mit Docker auf deinem eigenen Server"
       },
       "customizable_slug": {
         "title": "Anpassbarer Slug",
@@ -24,7 +24,7 @@
       },
       "ai_slug": {
         "title": "KI-Unterstützung",
-        "description": "Generiere Slugs und OpenGraph-Metadaten aus Seiteninhalten"
+        "description": "Generiere Slugs und OpenGraph-Metadaten aus der URL"
       },
       "link_expiration": {
         "title": "Link-Steuerung",
@@ -32,7 +32,7 @@
       },
       "device_routing": {
         "title": "Smart Routing",
-        "description": "Leite Besucher nach Gerät oder Land weiter"
+        "description": "Leite Apple- und Android-Besucher an unterschiedliche Ziele weiter"
       },
       "og_preview": {
         "title": "Social Preview",
@@ -48,7 +48,7 @@
       },
       "import_export": {
         "title": "Import/Export",
-        "description": "Übertrage Links gesammelt per JSON und exportiere Zugriffsanalysen als CSV"
+        "description": "Übertrage Links gesammelt per JSON und exportiere Analysen als CSV"
       },
       "multi_language": {
         "title": "Mehrsprachig",
@@ -56,25 +56,25 @@
       }
     },
     "cta": {
-      "title": "Sink bereitstellen",
-      "description": "Folge der Anleitung für die ersten Schritte, um Sink auf Cloudflare einzurichten und bereitzustellen",
-      "button": "Deployment-Anleitung öffnen"
+      "title": "Slite selbst betreiben",
+      "description": "Betreibe Slite mit Docker auf deinem eigenen Server",
+      "button": "Einrichtung ansehen"
     },
     "logos": {
-      "title": "Entwickelt mit großartigen Technologien"
+      "title": "Läuft auf deinem eigenen Server"
     },
     "twitter": {
       "follow": "Folge mir auf X (Twitter)"
     },
     "stats": {
-      "title": "Sink in Zahlen",
-      "subtitle": "Von Entwicklern weltweit vertraut",
+      "title": "Slite in Zahlen",
+      "subtitle": "Open Source auf GitHub",
       "stars": "Stars auf GitHub",
       "forks": "Forks"
     },
     "testimonials": {
       "title": "Von Nutzern geliebt",
-      "subtitle": "Erfahre, was Entwickler über Sink sagen"
+      "subtitle": "Erfahre, was Entwickler über Slite sagen"
     }
   }
 }

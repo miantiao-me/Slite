@@ -1,83 +1,29 @@
----
-title: 故障排查
-description: 解决常见的部署、登录、访问分析、重定向、导入、备份和功能问题。
----
+# 故障排除
 
-# 故障排查
+## 应用无法启动或无法写入数据
 
-## 无法创建或打开短链接
+请确认使用 Node.js 24 或更高版本。检查进程对 `/data`（或 `NUXT_DATA_DIR`）目录是否具备写入权限，并确认若设置了 `NUXT_SITE_TOKEN` 其长度不少于 8 个字符。查看容器日志。该目录同一时间只允许一个进程使用；请停止其他仍在占用该目录的容器或开发服务器。
 
-1. 确认 D1 和 KV 已用准确名称 `DB` 和 `KV` 绑定
-2. 重新部署最新的 `master` 分支
-3. 打开一次 **Dashboard → Links**（一次性存储初始化）
+## 无法登录仪表盘
 
-如果看到 **「存储未就绪」（HTTP 423）**，说明第 3 步还没做。新部署只需打开一次。很旧的纯 KV 实例需要[存储迁移](/zh-CN/storage/kv-to-d1)。
+请将 `NUXT_SITE_TOKEN` 设置为至少 8 个字符的值并重启进程。未设置该变量时，Slite 会生成仅供该进程自身使用的随机令牌且绝不对外暴露，导致仪表盘和所有 API 请求均返回 401。该随机令牌在每次重启后都会变化。
 
-<details>
-  <summary><b>KV 绑定截图</b></summary>
-  <img alt="Cloudflare 中的 KV 绑定设置" src="../images/faqs-kv.png">
-</details>
+## 更换容器后数据丢失
 
-## 无法登录或调用 API
+检查是否将同一个持久化本地数据卷挂载到了 `/data`。容器可写层中的数据无法持久保存。版本升级时切勿执行 `docker compose down -v`。
 
-密码必须与 `NUXT_SITE_TOKEN` 完全一致（不要有多余空格）。至少 8 个字符。如果从未设置过，可能用了构建时的随机密码 — 请显式设置密钥并重新部署。
+## 国家和城市图表为空
 
-如果使用了 Cloudflare Access：
+首先检查进程加载了哪个 GeoIP 数据库。正式发布版 Docker 镜像内置了 DB-IP City Lite，国家、地区、城市和坐标开箱即用；从源码构建或未提供可读数据库的自定义镜像会平稳回退，将地理位置字段留空。City Lite 不包含时区或邮政编码数据。开启代理信任不会凭空产生地理位置数据，它仅改变被信任的客户端 IP。详见 [GeoIP 数据库](/zh-CN/deployment/docker#geoip-数据库)。
 
-- `NUXT_CF_ACCESS_TEAM_DOMAIN` 与 `NUXT_CF_ACCESS_AUD` 都已设置
-- AUD 来自该 Access 应用
-- Access Cookie 能到达 `/api`（不要把 Cookie Path 只限在 `/dashboard`）
+## 反向代理后获取到的客户端地址不准确
 
-## 访问分析为空
+除非应用仅能通过受信任的代理访问，否则请保持代理信任关闭。在将 `NUXT_TRUST_PROXY` 设置为 `true` 之前，请配置该代理重写转发头。
 
-请逐项确认：
+## AI 功能不可用
 
-1. Analytics Engine 已绑定为 `ANALYTICS`
-2. 数据集名称一致（默认 `sink`，或与 `NUXT_DATASET` 相同）
-3. `NUXT_CF_ACCOUNT_ID` 是承载本应用的账户
-4. `NUXT_CF_API_TOKEN` 是仅含 **Account → Account Analytics → Read** 的 Custom Token
-5. 机器人过滤或仪表盘筛选没有把流量藏起来
+`NUXT_AI_BASE_URL` 与 `NUXT_AI_MODEL` 默认均为空；必须同时设置两者才能启用 AI 功能。请检查服务商网络连通性及所选模型。若服务商无需鉴权，`NUXT_AI_API_KEY` 可留空。AI 功能为可选，普通短链接跳转不需要该功能。
 
-完整步骤见[访问分析](/zh-CN/features/analytics)。
+## 如何迁移数据或恢复实例？
 
-<details>
-  <summary><b>Analytics Engine 绑定截图</b></summary>
-  <img alt="Cloudflare 中的 Analytics Engine 绑定设置" src="../images/faqs-Analytics_engine.png">
-</details>
-
-## 近实时事件成批到达或感觉有延迟
-
-这是预期行为。页面大约每 10 秒刷新一次，并以大约每秒 1 个事件回放。它不是 WebSocket 实时流。同时确认视图未暂停、标签页可见。
-
-## 自定义短链码不保留大写
-
-设置 `NUXT_CASE_SENSITIVE=true` 并重新部署。只影响**自定义**码；自动生成的码始终小写。已有码不会自动改名。
-
-## 隐匿页面空白或拒绝加载
-
-目标站很可能禁止被嵌入。请关闭隐匿；若你控制目标站，也可改其策略。OAuth 和支付页通常会拒绝嵌入。
-
-## 安全浏览没有更改 unsafe 标志
-
-仅当创建/编辑时**未设置** `unsafe` 才会自动检测。显式的 `true` 或 `false` 始终优先。DNS 检查失败时，Sink 会放行链接。
-
-## 导入跳过或拒绝记录
-
-- 活动短链码冲突会跳过
-- 格式错误会失败
-- 过期记录允许导入（有意为之）
-
-每个请求不要超过导出分页大小的一半。请使用导出得到的受保护密码，不要用仪表盘里遮盖后的占位符。
-
-## 没有创建备份
-
-1. 确认已绑定 `R2`
-2. 若存储尚未就绪，先打开一次 **Dashboard → Links**（此前备份会返回 423）
-3. Workers 计划备份：检查 `NUXT_DISABLE_AUTO_BACKUP` 与 Cron
-4. Pages：本仓库只支持手动备份
-
-## 重定向看起来仍是旧值
-
-浏览器、CDN 或 KV 缓存可能延迟可见变更。在[配置参考](/zh-CN/configuration/#高级默认值)中查看 `NUXT_LINK_CACHE_TTL` 和 `NUXT_REDIRECT_NO_STORE`，再在仪表盘确认链接。
-
-未知短链码（`NUXT_NOT_FOUND_REDIRECT`）始终使用 **302**，即使普通跳转是 `301`。
+对于旧实例，请[手动导出并导入链接](/zh-CN/features/import-export)。若需完整恢复 Slite 实例，请使用[停机状态下复制的完整 `/data` 目录](/zh-CN/features/backups)。仅凭链接备份无法恢复访问分析数据或图片。

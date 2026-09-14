@@ -15,8 +15,8 @@
         "description": "Theo dõi dữ liệu và thu thập thống kê hữu ích"
       },
       "serverless": {
-        "title": "Không máy chủ",
-        "description": "Triển khai mà không cần máy chủ truyền thống"
+        "title": "Tự lưu trữ",
+        "description": "Chạy Slite trên máy chủ của bạn bằng Docker"
       },
       "customizable_slug": {
         "title": "Slug tùy chỉnh",
@@ -24,7 +24,7 @@
       },
       "ai_slug": {
         "title": "Trợ lý AI",
-        "description": "Tạo slug và metadata OpenGraph từ nội dung trang"
+        "description": "Tạo slug và metadata OpenGraph từ URL"
       },
       "link_expiration": {
         "title": "Kiểm soát liên kết",
@@ -32,7 +32,7 @@
       },
       "device_routing": {
         "title": "Điều hướng thông minh",
-        "description": "Chuyển hướng khách truy cập theo thiết bị hoặc quốc gia"
+        "description": "Chuyển hướng khách truy cập Apple và Android đến các đích khác nhau"
       },
       "og_preview": {
         "title": "Xem trước mạng xã hội",
@@ -48,7 +48,7 @@
       },
       "import_export": {
         "title": "Nhập/Xuất",
-        "description": "Chuyển liên kết hàng loạt bằng JSON và xuất phân tích truy cập dưới dạng CSV"
+        "description": "Chuyển liên kết hàng loạt bằng JSON và xuất dữ liệu phân tích dưới dạng CSV"
       },
       "multi_language": {
         "title": "Đa ngôn ngữ",
@@ -56,25 +56,25 @@
       }
     },
     "cta": {
-      "title": "Triển khai Sink",
-      "description": "Xem hướng dẫn bắt đầu để cấu hình và triển khai Sink trên Cloudflare",
-      "button": "Xem hướng dẫn triển khai"
+      "title": "Tự chạy Slite",
+      "description": "Chạy Slite bằng Docker trên máy chủ của bạn",
+      "button": "Xem hướng dẫn thiết lập"
     },
     "logos": {
-      "title": "Xây dựng bằng những công nghệ tuyệt vời"
+      "title": "Chạy trên máy chủ của bạn"
     },
     "twitter": {
       "follow": "Theo dõi tôi trên X (Twitter)"
     },
     "stats": {
-      "title": "Số liệu Sink",
-      "subtitle": "Được tin dùng bởi các nhà phát triển trên toàn thế giới",
+      "title": "Số liệu Slite",
+      "subtitle": "Mã nguồn mở trên GitHub",
       "stars": "Stars trên GitHub",
       "forks": "Forks"
     },
     "testimonials": {
       "title": "Người dùng yêu thích",
-      "subtitle": "Xem các nhà phát triển nói gì về Sink"
+      "subtitle": "Xem các nhà phát triển nói gì về Slite"
     }
   }
 }

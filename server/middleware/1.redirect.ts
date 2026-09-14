@@ -1,5 +1,9 @@
-import type { Link } from '@/types'
+import type { Link } from '#shared/schemas/link'
 import { parsePath, withQuery } from 'ufo'
+import { AnalyticsUnavailableError } from '../database/analytics'
+import { lookupGeo } from '../services/geo'
+import { requestClientIp } from '../utils/client-ip'
+import { selectGeoRedirectUrl } from '../utils/geo-redirect'
 
 const SOCIAL_BOTS = [
   'applebot',
@@ -50,8 +54,7 @@ function hasOgConfig(link: Link): boolean {
 export default eventHandler(async (event) => {
   const { pathname: slug } = parsePath(event.path.replace(/^\/|\/$/g, ''))
   const { slugRegex, reserveSlug } = useAppConfig()
-  const { homeURL, linkCacheTtl, caseSensitive, redirectWithQuery, redirectStatusCode, redirectNoStore } = useRuntimeConfig(event)
-  const { cloudflare } = event.context
+  const { homeURL, caseSensitive, redirectWithQuery, redirectStatusCode, redirectNoStore } = useRuntimeConfig(event)
 
   if (event.path === '/' && homeURL)
     return sendRedirect(event, homeURL)
@@ -62,15 +65,15 @@ export default eventHandler(async (event) => {
     return
   }
 
-  if (slug && !reserveSlug.includes(slug) && slugRegex.test(slug) && cloudflare) {
+  if (slug && !reserveSlug.includes(slug) && slugRegex.test(slug)) {
     let link: Link | null = null
 
     const lowerCaseSlug = slug.toLowerCase()
-    link = await getLink(event, caseSensitive ? slug : lowerCaseSlug, linkCacheTtl)
+    link = await getLink(event, caseSensitive ? slug : lowerCaseSlug)
 
     if (!caseSensitive && !link && lowerCaseSlug !== slug) {
       console.log('original slug fallback:', `slug:${slug} lowerCaseSlug:${lowerCaseSlug}`)
-      link = await getLink(event, slug, linkCacheTtl)
+      link = await getLink(event, slug)
     }
 
     if (link) {
@@ -89,15 +92,11 @@ export default eventHandler(async (event) => {
       const shouldRedirectWithQuery = link.redirectWithQuery ?? redirectWithQuery
       const buildTarget = (url: string) => shouldRedirectWithQuery ? withQuery(url, query) : url
 
-      let targetUrl = link.url
-      const country = event.context.cloudflare?.request?.cf?.country
-      if (country && typeof country === 'string' && link.geo?.[country.toUpperCase()]) {
-        targetUrl = link.geo[country.toUpperCase()]!
-      }
-      targetUrl = buildTarget(targetUrl)
-
+      // Pick the raw destination first (device > geo > default), then build one
+      // target so redirectWithQuery applies no matter which destination wins.
+      const geoRedirectUrl = selectGeoRedirectUrl(link, lookupGeo(requestClientIp(event)))
       const deviceRedirectUrl = getDeviceRedirectUrl(userAgent, link)
-      const finalTargetUrl = deviceRedirectUrl ?? targetUrl
+      const targetUrl = buildTarget(deviceRedirectUrl ?? geoRedirectUrl ?? link.url)
 
       // Password protection check
       if (link.password) {
@@ -113,7 +112,7 @@ export default eventHandler(async (event) => {
 
           // Password correct - show unsafe warning if needed
           if (link.unsafe && body?.confirm !== 'true') {
-            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, finalTargetUrl, { password: submittedPassword, locale: getLocale() }))
+            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, targetUrl, { password: submittedPassword, locale: getLocale() }))
           }
         }
         else if (headerPassword) {
@@ -135,11 +134,11 @@ export default eventHandler(async (event) => {
         if (event.method === 'POST') {
           const body = await readBody(event)
           if (body?.confirm !== 'true') {
-            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, finalTargetUrl, { locale: getLocale() }))
+            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, targetUrl, { locale: getLocale() }))
           }
         }
         else {
-          return sendNoStoreHtml(generateUnsafeWarningHtml(slug, finalTargetUrl, { locale: getLocale() }))
+          return sendNoStoreHtml(generateUnsafeWarningHtml(slug, targetUrl, { locale: getLocale() }))
         }
       }
 
@@ -154,10 +153,13 @@ export default eventHandler(async (event) => {
 
       if (accessLogResult) {
         try {
-          writeAccessLog(event, accessLogResult.logs)
+          await writeAccessLog(event, accessLogResult.logs)
         }
-        catch {
-          console.error({ event: 'access_log.write.failed' })
+        catch (error) {
+          // Degraded analytics is expected; skip silently instead of logging
+          // one failure per redirect.
+          if (!(error instanceof AnalyticsUnavailableError))
+            console.error({ event: 'access_log.write.failed' })
         }
 
         try {
@@ -171,18 +173,18 @@ export default eventHandler(async (event) => {
       if (deviceRedirectUrl) {
         if (redirectNoStore)
           setHeader(event, 'Cache-Control', 'no-store')
-        return sendRedirect(event, finalTargetUrl, +redirectStatusCode)
+        return sendRedirect(event, targetUrl, +redirectStatusCode)
       }
 
       if (isSocialBot(userAgent) && hasOgConfig(link)) {
-        const baseUrl = `${getRequestProtocol(event)}://${getRequestHost(event)}`
+        const baseUrl = requestOrigin(event)
         const html = generateOgHtml(link, targetUrl, baseUrl)
         setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
         return html
       }
 
       if (link.cloaking) {
-        const baseUrl = `${getRequestProtocol(event)}://${getRequestHost(event)}`
+        const baseUrl = requestOrigin(event)
         const html = generateCloakingHtml(link, targetUrl, baseUrl)
         setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
         setHeader(event, 'Cache-Control', 'no-store, private')
@@ -191,7 +193,7 @@ export default eventHandler(async (event) => {
 
       if (redirectNoStore)
         setHeader(event, 'Cache-Control', 'no-store')
-      return sendRedirect(event, finalTargetUrl, +redirectStatusCode)
+      return sendRedirect(event, targetUrl, +redirectStatusCode)
     }
     else {
       if (notFoundRedirect) {

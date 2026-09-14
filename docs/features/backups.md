@@ -1,35 +1,26 @@
----
-title: Link Backups
-description: Save link snapshots to R2, what they contain, scheduling, and restore limits.
----
+# Backups and Restore
 
-# Link Backups
+## Link backups
 
-A Sink backup is a **JSON snapshot of your links** stored in **R2** (Cloudflare file storage). It is not a full database dump.
+Application backups stored in `/data/backups` are **link JSON exports, not complete database snapshots**. They do not include the process-local unstorage memory link cache, DuckDB analytics, uploaded image files, or all application state. The link cache rebuilds automatically and does not need restoring. Keep copies outside the host: files on the same disk are not protection against disk loss.
 
-## Requirements
+Automatic link backups run daily by default and retain the latest 30 automatic backups. Manual backups are not removed by automatic retention. Set `NUXT_DISABLE_AUTO_BACKUP=true` on the running application to disable automatic backups; manual backups remain available.
 
-1. Bind **R2**
-2. Finish one-time storage setup: open **Dashboard → Links** after deploy. Until then, backup fails with “storage not ready” (HTTP 423). See [storage setup](/storage/kv-to-d1)
-3. Create a snapshot from the dashboard or `POST /api/backup`
+Restore compatible exported links with the ordinary [import API](/features/import-export). Import is not a full-instance restore and does not overwrite active slug conflicts.
 
-Automatic daily backups need Workers cron (this repo: **00:00 UTC**). Turn off with `NUXT_DISABLE_AUTO_BACKUP=true`. Pages supports **manual** snapshots only.
+## Complete backup
 
-File names:
+For a consistent full backup:
 
-- Automatic: `backups/links-<timestamp>.json`
-- Manual: `backups/manual-links-<timestamp>.json`
+1. Stop the container with `docker compose stop` and confirm no other process uses its data directory.
+2. Copy or archive the **entire mounted `/data` directory** from the host or volume, including `slite.sqlite` and its sidecar files if present, `analytics.duckdb`, `files/images`, and `backups`.
+3. Store deployment configuration and secrets separately and securely, together with the application revision.
+4. Start the container with `docker compose start`.
 
-## What is inside
+Do not copy only the main database files while Slite is running. A live filesystem copy is not guaranteed to be consistent.
 
-All link records in D1, including expired ones and password material. Treat every snapshot as **secret**.
+## Complete restore
 
-::: warning Snapshots are sensitive
-Limit who can read the R2 bucket. Snapshots may include password material and full destination URLs.
-:::
+Stop Slite, restore the entire saved directory to its local volume, ensure the container user can read and write it, and start the matching application revision. Do not merge a snapshot into a running instance. Verify sign-in, redirects, images, and analytics before reopening traffic.
 
-Not included: database schema, delete markers, migration history, analytics data.
-
-## Restore limits
-
-Sink does not auto-delete old snapshots or offer one-click full restore. You can [import](./import-export) records from a snapshot (with normal import rules). For database-level recovery, see Cloudflare D1 [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
+The link cache uses the unstorage memory driver and lives only in the running process, so it is repopulated from SQLite on demand. Restoring cached link entries is unnecessary.

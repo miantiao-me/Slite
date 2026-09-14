@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AreaChart, FileJson, Globe, Hourglass, Languages, Link, Paintbrush, QrCode, ServerOff, Share2, Smartphone, Sparkles } from '@lucide/vue'
+import { AreaChart, FileJson, Globe, Hourglass, Languages, Link, Paintbrush, QrCode, Server, Share2, Smartphone, Sparkles } from '@lucide/vue'
 
 const { t } = useI18n()
 const features = computed(() => [
@@ -16,7 +16,7 @@ const features = computed(() => [
   {
     title: t('home.features.serverless.title'),
     description: t('home.features.serverless.description'),
-    icon: ServerOff,
+    icon: Server,
   },
   {
     title: t('home.features.customizable_slug.title'),

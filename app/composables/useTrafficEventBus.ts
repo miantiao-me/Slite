@@ -14,7 +14,7 @@ function setReady(value: boolean) {
 }
 
 /**
- * Traffic event bus for globe arc/ripple animations.
+ * Traffic event bus for globe ripple animations.
  * Wraps global event bus for testability and explicit dependency.
  */
 export function useTrafficEventBus() {

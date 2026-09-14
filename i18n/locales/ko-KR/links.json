@@ -1,13 +1,5 @@
 {
   "links": {
-    "migration_gate": {
-      "loading": "링크 데이터 준비 중",
-      "scanned": "링크 {count}개 스캔됨",
-      "failed_title": "링크 마이그레이션 실패",
-      "failed_description": "KV에서 D1으로의 마이그레이션이 완료될 때까지 링크를 사용할 수 없습니다.",
-      "retry": "다시 시도",
-      "open_migration": "마이그레이션 도구 열기"
-    },
     "create": "링크 생성",
     "edit": "링크 편집",
     "delete_success": "삭제되었습니다!",

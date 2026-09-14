@@ -1,8 +1,29 @@
+import type { H3Event } from 'h3'
+import { generateText } from '@xsai/generate-text'
 import { destr } from 'destr'
 
-export interface AiChatResponse {
-  response?: string
-  choices?: { message?: { content?: string } }[]
+export interface AiMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+export function requireAiConfig(event: H3Event) {
+  const config = useRuntimeConfig(event)
+  if (!config.aiBaseUrl || !config.aiModel)
+    throw createError({ status: 501, statusText: 'AI not enabled' })
+  return config
+}
+
+export async function generateAiText(event: H3Event, messages: AiMessage[]): Promise<string> {
+  const { aiApiKey, aiBaseUrl, aiModel } = requireAiConfig(event)
+  const { text } = await generateText({
+    apiKey: aiApiKey || undefined,
+    baseURL: aiBaseUrl.endsWith('/') ? aiBaseUrl : `${aiBaseUrl}/`,
+    model: aiModel,
+    messages,
+    abortSignal: AbortSignal.timeout(15000),
+  })
+  return text ?? ''
 }
 
 function stripCodeFence(content: string): string {
@@ -22,8 +43,7 @@ function stripCodeFence(content: string): string {
   return lines.join('\n').trim()
 }
 
-export function parseAiResponse(response: AiChatResponse): Record<string, unknown> {
-  const content = response.response ?? response.choices?.[0]?.message?.content ?? ''
+export function parseAiResponse(content: string): Record<string, unknown> {
   if (!content.trim())
     return {}
 

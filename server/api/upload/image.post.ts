@@ -5,7 +5,8 @@ const slugValidator = SlugSchema
 
 defineRouteMeta({
   openAPI: {
-    description: 'Upload an image to R2 storage',
+    description: 'Upload an image to local storage',
+    security: [{ bearerAuth: [] }],
     requestBody: {
       required: true,
       content: {
@@ -25,13 +26,11 @@ defineRouteMeta({
 })
 
 export default eventHandler(async (event) => {
-  const R2 = requireR2Bucket(event.context.cloudflare.env)
-
   const formData = await readFormData(event)
   const file = formData.get('file') as File | null
   const slug = formData.get('slug') as string | null
 
-  if (!file) {
+  if (!(file instanceof File)) {
     throw createError({ status: 400, statusText: 'File is required' })
   }
 
@@ -56,11 +55,7 @@ export default eventHandler(async (event) => {
   const key = `images/${slug}/${nanoid(10)()}.${ext}`
 
   const arrayBuffer = await file.arrayBuffer()
-  await R2.put(key, arrayBuffer, {
-    httpMetadata: {
-      contentType: file.type,
-    },
-  })
+  await writeStoredFile('images', key.slice('images/'.length), new Uint8Array(arrayBuffer))
 
   const imageUrl = `/_assets/${key}`
   return { url: imageUrl, key }

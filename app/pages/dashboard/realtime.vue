@@ -40,6 +40,17 @@ function handleFilterChange(type: string, value: string) {
       </Button>
       <DashboardTimePicker />
       <DashboardFilters :filters="realtimeStore.filters" @change="handleFilterChange" />
+      <a
+        href="https://db-ip.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="
+          text-xs text-muted-foreground transition-colors
+          hover:text-foreground
+        "
+      >
+        IP Geolocation by DB-IP
+      </a>
     </Teleport>
 
     <DashboardRealtime />

@@ -1,68 +1,71 @@
 import type { H3Event } from 'h3'
 import type { Link } from '../../shared/schemas/link'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createLinks } from '../../server/utils/link-store'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { closeDatabase, initializeDatabase } from '../../server/database/sqlite'
+import { sqliteCreateLink, sqliteDeleteLink, sqliteGetAnyLink, sqliteSnapshotAllLinks, sqliteUpdateLink } from '../../server/services/link-store/sqlite'
 
-const mocks = vi.hoisted(() => ({
-  d1CreateLinks: vi.fn(),
-  d1GetActiveLinkVersions: vi.fn(),
-  deleteLinkCache: vi.fn(),
-  putLinkCache: vi.fn(),
-}))
+let directory = ''
+const event = {} as H3Event
 
-vi.mock('../../server/services/link-store/d1', () => ({
-  d1CountLinks: vi.fn(),
-  d1CreateLink: vi.fn(),
-  d1CreateLinks: mocks.d1CreateLinks,
-  d1DeleteLink: vi.fn(),
-  d1GetActiveLink: vi.fn(),
-  d1GetActiveLinkVersions: mocks.d1GetActiveLinkVersions,
-  d1GetAnyLink: vi.fn(),
-  d1GetLinkWithMetadata: vi.fn(),
-  d1HasActiveLinkVersion: vi.fn(),
-  d1IterateAllLinks: vi.fn(),
-  d1ListLinks: vi.fn(),
-  d1ListTags: vi.fn(),
-  d1SearchLinks: vi.fn(),
-  d1UpdateLink: vi.fn(),
-}))
+beforeEach(async () => {
+  directory = await mkdtemp(join(tmpdir(), 'slite-sqlite-test-'))
+  vi.stubGlobal('useRuntimeConfig', () => ({ public: { previewMode: false } }))
+  initializeDatabase(directory)
+})
 
-vi.mock('../../server/services/link-store/kv', () => ({
-  deleteLinkCache: mocks.deleteLinkCache,
-  isActiveLinkExpiration: () => true,
-  putLinkCache: mocks.putLinkCache,
-  readLegacyKvLink: vi.fn(),
-}))
+afterEach(async () => {
+  closeDatabase()
+  vi.unstubAllGlobals()
+  if (directory)
+    await rm(directory, { recursive: true, force: true })
+})
 
-vi.mock('../../server/services/link-store/migration', () => ({
-  insertMigratedKvLink: vi.fn(),
-  readCompletedLinkMigrationMarker: vi.fn(),
-}))
+function fixture(): Link {
+  const now = Math.floor(Date.now() / 1000)
+  return { id: 'original01', slug: `version-${crypto.randomUUID()}`, url: 'https://example.com/original', createdAt: now, updatedAt: now, tags: ['original'] }
+}
 
-describe('createLinks', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-    vi.clearAllMocks()
+describe('sqlite optimistic updates', () => {
+  it('rejects a stale version without overwriting the winner or its tags', async () => {
+    const link = fixture()
+    expect((await sqliteCreateLink(event, link)).created).toBe(true)
+    const winner = { ...link, updatedAt: link.updatedAt + 1, url: 'https://example.com/winner', tags: ['winner'] }
+    expect((await sqliteUpdateLink(event, winner, link)).updated).toBe(true)
+    expect((await sqliteUpdateLink(event, { ...link, tags: ['stale'] }, link)).updated).toBe(false)
+    expect(await sqliteGetAnyLink(event, link.slug)).toEqual(winner)
   })
 
-  it('keeps D1 success when post-write cache verification fails', async () => {
-    const link: Link = {
-      id: 'bulk-id',
-      slug: 'bulk-success',
-      url: 'https://example.com',
-      createdAt: 1,
-      updatedAt: 1,
-      tags: [],
-    }
-    mocks.d1CreateLinks.mockResolvedValue([{ created: true, effectiveExpiresAt: null }])
-    mocks.putLinkCache.mockResolvedValue(true)
-    mocks.d1GetActiveLinkVersions.mockRejectedValue(new Error('version query failed'))
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('rejects a stale identity after delete and recreation with the same slug', async () => {
+    const link = fixture()
+    await sqliteCreateLink(event, link)
+    await sqliteDeleteLink(event, link.slug)
+    const replacement = { ...link, id: 'replaced01', tags: ['replacement'] }
+    await sqliteCreateLink(event, replacement)
+    expect((await sqliteUpdateLink(event, link, link)).updated).toBe(false)
+    expect(await sqliteGetAnyLink(event, link.slug)).toEqual(replacement)
+  })
 
-    await expect(createLinks({} as H3Event, [link])).resolves.toEqual([{ created: true }])
+  it('rolls back link and tag changes when a transaction fails', async () => {
+    const link = fixture()
+    await sqliteCreateLink(event, link)
+    const invalid = { ...link, url: 'https://example.com/rollback', tags: [null as unknown as string] }
+    expect(() => sqliteUpdateLink(event, invalid, link)).toThrow()
+    expect(await sqliteGetAnyLink(event, link.slug)).toEqual(link)
+  })
+})
 
-    expect(mocks.d1CreateLinks).toHaveBeenCalledOnce()
-    expect(mocks.deleteLinkCache).toHaveBeenCalledWith(expect.anything(), link.slug)
-    expect(consoleError).toHaveBeenCalledWith(expect.objectContaining({ operation: 'bulk-write-through' }))
+describe('sqlite backup snapshot', () => {
+  it('returns every link with its tags from one transaction', async () => {
+    const first = fixture()
+    const second = fixture()
+    await sqliteCreateLink(event, first)
+    await sqliteCreateLink(event, second)
+
+    const snapshot = sqliteSnapshotAllLinks()
+    const expected = [first, second].sort((a, b) => (a.slug < b.slug ? -1 : 1))
+    expect(snapshot).toEqual(expected)
   })
 })

@@ -1,13 +1,5 @@
 {
   "links": {
-    "migration_gate": {
-      "loading": "正在準備連結資料",
-      "scanned": "已掃描 {count} 條連結",
-      "failed_title": "連結遷移失敗",
-      "failed_description": "KV 到 D1 遷移完成前，連結暫時無法使用。",
-      "retry": "重試",
-      "open_migration": "前往遷移工具"
-    },
     "create": "創建連結",
     "edit": "編輯連結",
     "delete_success": "刪除成功！",

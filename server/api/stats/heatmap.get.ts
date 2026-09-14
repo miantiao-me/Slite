@@ -1,7 +1,13 @@
-import type { H3Event } from 'h3'
 import { sql } from 'kysely'
 import { z } from 'zod'
 import { QuerySchema } from '#shared/schemas/query'
+
+defineRouteMeta({
+  openAPI: {
+    description: 'Get access visits by weekday and hour',
+    security: [{ bearerAuth: [] }],
+  },
+})
 
 const HeatmapQuerySchema = QuerySchema.extend({
   clientTimezone: z.string()
@@ -10,19 +16,18 @@ const HeatmapQuerySchema = QuerySchema.extend({
     .default('Etc/UTC'),
 })
 
-function query2sql(query: z.infer<typeof HeatmapQuerySchema>, event: H3Event) {
+function query2sql(query: z.infer<typeof HeatmapQuerySchema>) {
   const filter = buildAnalyticsFilter(query)
-  const { dataset } = useRuntimeConfig(event)
   const timezone = getSafeTimezone(query.clientTimezone)
-  const tzTimestamp = sql<string>`toDateTime(toUnixTimestamp(${sql.ref('timestamp')}), ${sql.lit(timezone)})`
-  const analyticsQuery = createAnalyticsQuery(dataset)
+  const tzTimestamp = sql<string>`timezone(${timezone}, ${sql.ref('timestamp')})`
+  const analyticsQuery = createAnalyticsQuery()
   const filteredQuery = filter ? analyticsQuery.where(filter) : analyticsQuery
 
   return filteredQuery
     .select([
-      sql<number>`toDayOfWeek(${tzTimestamp})`.as('weekday'),
-      sql<number>`toHour(${tzTimestamp})`.as('hour'),
-      sql<number>`SUM(_sample_interval)`.as('visits'),
+      sql<number>`isodow(${tzTimestamp})`.as('weekday'),
+      sql<number>`hour(${tzTimestamp})`.as('hour'),
+      sql<number>`COUNT(*)`.as('visits'),
       sql<number>`COUNT(DISTINCT ${sql.ref(logsMap.ip!)})`.as('visitors'),
     ])
     .groupBy(['weekday', 'hour'])
@@ -32,6 +37,6 @@ function query2sql(query: z.infer<typeof HeatmapQuerySchema>, event: H3Event) {
 
 export default eventHandler(async (event) => {
   const query = await getValidatedQuery(event, HeatmapQuerySchema.parse)
-  const sql = query2sql(query, event)
-  return useWAE(event, sql)
+  const sql = query2sql(query)
+  return useAnalytics(event, sql)
 })

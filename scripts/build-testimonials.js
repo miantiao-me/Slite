@@ -1,39 +1,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+// Manual utility only: run with `node scripts/build-testimonials.js`.
+// It is intentionally not wired into the build pipeline because it needs network access.
+
 // Tweet IDs to fetch
 const TWEET_IDS = [
-  '1990813013247492308', // @xmok_
-  '1876990358250246628', // @ianhowells
-  '1931199560489251052', // @indie_maker_fox
-  '1944683470627741966', // @allentown521
-  '1925250262870237555', // @Mokkapps
-  '1795169172873413116', // @GitHubGPT
-  '1953003326317920422', // @ossalternative
-  '1809763345320624271', // @f_sugar
-  '1833125667568804284', // @bitdoze
-  '1817702576629985685', // @HiTw93
-  '1846465874389356916', // @luoleiorg
-  '1796478331522781460', // @LuoSays
-  '1930301401323975179', // @lakphy
-  '1961700003459862799', // @wey_gu
-  '1794746047136411723', // @morandotim
-  '1988243083558035901', // @yeahwong
-  '1808150012058390969', // @m1ssuo
-  '1893594908147270073', // @hellokaton
-  '1857623546606080350', // @TooooooBug
-  '1837864449732235602', // @geekbb
   '1794162548776079701', // @miantiao_me
-  '1901619539869331519', // @GitHub_Daily
-  '1941722268847177887', // @KaiyuanXie
-  '1952949386348249504', // @taresky
-  '1988423170148495867', // @wey_gu
-  '2008358120498884871', // @indie_maker_fox
-  '2008717152283705401', // @FrankFika
-  '2059979252578357733', // @iluciddreaming
-  '1877194614806864242', // @frankwong0205
-  '1888954153189380600', // @iBigQiang
-  '2018655797006541184', // @wey_gu
 ]
 
 const API_BASE = 'https://react-tweet.vercel.app/api/tweet'

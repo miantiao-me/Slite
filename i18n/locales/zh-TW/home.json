@@ -15,8 +15,8 @@
         "description": "監控連結分析病收集有價值的統計數據"
       },
       "serverless": {
-        "title": "無伺服器",
-        "description": "無需傳統伺服器即可部署"
+        "title": "自託管",
+        "description": "使用 Docker 在自己的伺服器上執行 Slite"
       },
       "customizable_slug": {
         "title": "自定義短連結",
@@ -24,7 +24,7 @@
       },
       "ai_slug": {
         "title": "AI 助手",
-        "description": "根據頁面內容生成短連結和 OpenGraph 元資料"
+        "description": "根據 URL 生成短連結和 OpenGraph 元資料"
       },
       "link_expiration": {
         "title": "連結控制",
@@ -32,7 +32,7 @@
       },
       "device_routing": {
         "title": "智慧路由",
-        "description": "根據訪客裝置或國家重定向"
+        "description": "將 Apple 和 Android 訪客跳轉到不同目標"
       },
       "og_preview": {
         "title": "社交預覽",
@@ -48,7 +48,7 @@
       },
       "import_export": {
         "title": "匯入/匯出",
-        "description": "透過 JSON 批次匯入或匯出連結，並透過 CSV 匯出存取分析"
+        "description": "透過 JSON 批次匯入或匯出連結，並透過 CSV 匯出分析資料"
       },
       "multi_language": {
         "title": "多語言",
@@ -56,25 +56,25 @@
       }
     },
     "cta": {
-      "title": "部署 Sink",
-      "description": "閱讀入門指南，在 Cloudflare 上設定並部署 Sink",
-      "button": "查看部署指南"
+      "title": "自行執行 Slite",
+      "description": "使用 Docker 在自己的伺服器上執行 Slite",
+      "button": "查看設定說明"
     },
     "logos": {
-      "title": "使用優秀的技術構建"
+      "title": "執行在你的伺服器上"
     },
     "twitter": {
       "follow": "在 X(Twitter) 上追蹤我"
     },
     "stats": {
-      "title": "有關 Sink 的數據",
-      "subtitle": "受到全球開發者信賴",
+      "title": "有關 Slite 的數據",
+      "subtitle": "在 GitHub 上開源",
       "stars": "個 GitHub 星星",
       "forks": "次分叉"
     },
     "testimonials": {
       "title": "深受用戶喜愛",
-      "subtitle": "看看開發者們都怎麼描述 Sink"
+      "subtitle": "看看開發者們都怎麼描述 Slite"
     }
   }
 }

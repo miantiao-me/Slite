@@ -5,7 +5,7 @@ description: Enable click webhooks and verify their HMAC signatures, delivery be
 
 # Click Webhooks
 
-Optional. When someone clicks a short link, Sink can POST a small JSON event to your URL. Configure `NUXT_WEBHOOK_URL` (and optional `NUXT_WEBHOOK_SECRET`) in [configuration](./).
+Optional. When someone clicks a short link, Slite can POST a small JSON event to your URL. Configure `NUXT_WEBHOOK_URL` (and optional `NUXT_WEBHOOK_SECRET`) in [configuration](./).
 
 Bot clicks excluded from analytics are also excluded here.
 
@@ -23,11 +23,13 @@ Each request includes `webhook-id` and `webhook-timestamp`. Signed requests also
 <webhook-id>.<webhook-timestamp>.<raw-body>
 ```
 
-Verify the **raw body** before parsing JSON. A wrong non-empty secret fails delivery (Sink will not fall back to unsigned).
+Verify the **raw body** before parsing JSON. A wrong non-empty secret fails delivery (Slite will not fall back to unsigned).
 
 ## Payload
 
 Event type `link.clicked` includes event id/time, link id/slug, and click attributes (country, city, device, browser, OS, referrer).
+
+Country and city come from the resolved [GeoIP database](/deployment/docker#geoip-database); release Docker images bundle DB-IP City Lite, while an instance without a readable database fails open and leaves them empty.
 
 It does **not** include IP, coordinates, full user-agent, query strings, passwords, or destination URLs.
 

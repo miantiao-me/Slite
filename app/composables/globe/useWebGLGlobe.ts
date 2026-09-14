@@ -1,13 +1,11 @@
 import type { InertiaState } from './interaction'
-import type { ArcData, RippleData, WebGLGlobeContext } from './types'
+import type { RippleData, WebGLGlobeContext } from './types'
 import * as twgl from 'twgl.js'
 import { ref, watch } from 'vue'
 import { parseColor } from './color'
-import { createArcGeometry, latLngToXYZ } from './geometry'
+import { latLngToXYZ } from './geometry'
 import { setupGlobeInteraction } from './interaction'
 import {
-  arcFragmentShader,
-  arcVertexShader,
   earthFragmentShader,
   earthVertexShader,
   rippleFragmentShader,
@@ -29,7 +27,6 @@ function deleteBufferInfo(gl: WebGLRenderingContext, bufferInfo: twgl.BufferInfo
 }
 
 const INTRO_SPIN_DURATION = 1000
-const MAX_ACTIVE_ARCS = 64
 const MAX_ACTIVE_RIPPLES = 96
 
 // Cached MAX_VERTEX_ATTRIBS per WebGL context (WeakMap avoids memory leaks)
@@ -48,15 +45,6 @@ function disableAllAttribs(gl: WebGLRenderingContext) {
 
 // Monotonic version counter for texture cache invalidation
 let textureVersion = 0
-
-interface ArcAnimation {
-  data: ArcData
-  startTime: number
-  duration: number
-  bufferInfo: twgl.BufferInfo
-  vertexCount: number
-  color: [number, number, number]
-}
 
 interface RippleAnimation {
   data: RippleData
@@ -77,7 +65,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
   // WebGL state
   let gl: WebGLRenderingContext | null = null
   let earthProgram: twgl.ProgramInfo | null = null
-  let arcProgram: twgl.ProgramInfo | null = null
   let rippleProgram: twgl.ProgramInfo | null = null
   let earthBufferInfo: twgl.BufferInfo | null = null
   let countryTexture: WebGLTexture | null = null
@@ -100,7 +87,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
   let introStartLat = 0
 
   // Active animations
-  let activeArcs: ArcAnimation[] = []
   let activeRipples: RippleAnimation[] = []
 
   // Reusable ripple buffer
@@ -190,9 +176,8 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
     isSupported.value = true
 
     earthProgram = twgl.createProgramInfo(gl, [earthVertexShader, earthFragmentShader]) as twgl.ProgramInfo | null
-    arcProgram = twgl.createProgramInfo(gl, [arcVertexShader, arcFragmentShader]) as twgl.ProgramInfo | null
     rippleProgram = twgl.createProgramInfo(gl, [rippleVertexShader, rippleFragmentShader]) as twgl.ProgramInfo | null
-    if (!earthProgram || !arcProgram || !rippleProgram)
+    if (!earthProgram || !rippleProgram)
       throw new Error('Failed to compile globe shaders')
 
     earthBufferInfo = twgl.createBufferInfoFromArrays(gl, {
@@ -411,45 +396,8 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
   }
 
   // ============================================================================
-  // Arc and Ripple
+  // Ripple
   // ============================================================================
-
-  function drawArc(arcData: ArcData, duration: number = 2000) {
-    if (!gl || disposed || !isReady.value || ctx.reducedMotion.value || ctx.paused.value)
-      return
-
-    const color = arcData.color ? parseColor(arcData.color) : [1.0, 0.6, 0.2] as [number, number, number]
-
-    const geom = createArcGeometry(
-      arcData.startLat,
-      arcData.startLng,
-      arcData.endLat,
-      arcData.endLng,
-      50,
-      1,
-    )
-
-    const bufferInfo = twgl.createBufferInfoFromArrays(gl, {
-      position: { numComponents: 3, data: geom.positions },
-      alpha: { numComponents: 1, data: geom.alphas },
-      dashParam: { numComponents: 1, data: geom.dashParams },
-    })
-
-    while (activeArcs.length >= MAX_ACTIVE_ARCS) {
-      const expired = activeArcs.shift()
-      if (expired)
-        deleteBufferInfo(gl, expired.bufferInfo)
-    }
-    activeArcs.push({
-      data: arcData,
-      startTime: performance.now(),
-      duration,
-      bufferInfo,
-      vertexCount: geom.positions.length / 3,
-      color,
-    })
-    startRenderLoop()
-  }
 
   function drawRipple(rippleData: RippleData) {
     if (!gl || disposed || !isReady.value || ctx.reducedMotion.value || ctx.paused.value)
@@ -531,46 +479,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
     twgl.setBuffersAndAttributes(gl, earthProgram, earthBufferInfo)
     twgl.setUniforms(earthProgram, { model, view, projection, u_countryTexture: countryTexture })
     twgl.drawBufferInfo(gl, earthBufferInfo)
-
-    // Draw arcs (ribbon triangle strips)
-    if (arcProgram && activeArcs.length > 0) {
-      gl.enable(gl.BLEND)
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-      gl.depthMask(false)
-      gl.disable(gl.CULL_FACE)
-
-      const newArcs: ArcAnimation[] = []
-      for (const arc of activeArcs) {
-        const elapsed = now - arc.startTime
-        const progress = Math.min(elapsed / arc.duration, 1)
-
-        if (progress < 1 || elapsed < arc.duration + 500) {
-          const fadeProgress = progress >= 1 ? 1 - (elapsed - arc.duration) / 500 : 1
-          // Each arc point produces 2 vertices; ensure even count for triangle strip
-          let visibleVerts = Math.floor(arc.vertexCount * Math.min(progress, 1))
-          visibleVerts = visibleVerts & ~1
-
-          if (visibleVerts >= 4) {
-            disableAllAttribs(gl!)
-            gl!.useProgram(arcProgram!.program)
-            twgl.setBuffersAndAttributes(gl!, arcProgram!, arc.bufferInfo)
-            twgl.setUniforms(arcProgram!, { model, view, projection, u_color: arc.color, u_fade: fadeProgress, u_dashCount: 8.0, u_dashRatio: 0.8 })
-            gl!.drawArrays(gl!.TRIANGLE_STRIP, 0, visibleVerts)
-          }
-          newArcs.push(arc)
-        }
-        else {
-          // Release GPU buffers for expired arcs
-          deleteBufferInfo(gl!, arc.bufferInfo)
-        }
-      }
-
-      activeArcs = newArcs
-      gl.enable(gl.CULL_FACE)
-      gl.depthMask(true)
-      gl.disable(gl.BLEND)
-    }
-
     // Draw ripples (depth test off — shader backface check handles occlusion)
     if (rippleProgram && activeRipples.length > 0) {
       gl.enable(gl.BLEND)
@@ -655,7 +563,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
 
   function needsContinuousRender() {
     return !ctx.paused.value && ((!ctx.reducedMotion.value && (isAutoRotating.value || introSpinActive || inertia.isActive))
-      || activeArcs.length > 0
       || activeRipples.length > 0)
   }
 
@@ -709,11 +616,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
     inertia.isActive = false
     inertia.velocityX = 0
     inertia.velocityY = 0
-    if (gl) {
-      for (const arc of activeArcs)
-        deleteBufferInfo(gl, arc.bufferInfo)
-    }
-    activeArcs = []
     activeRipples = []
     startRenderLoop()
   }
@@ -725,11 +627,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
     inertia.isActive = false
     inertia.velocityX = 0
     inertia.velocityY = 0
-    if (gl) {
-      for (const arc of activeArcs)
-        deleteBufferInfo(gl, arc.bufferInfo)
-    }
-    activeArcs = []
     activeRipples = []
     textureUpdateDirty = false
     stopRenderLoop()
@@ -785,10 +682,6 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
         gl.deleteProgram(earthProgram.program)
         earthProgram = null
       }
-      if (arcProgram) {
-        gl.deleteProgram(arcProgram.program)
-        arcProgram = null
-      }
       if (rippleProgram) {
         gl.deleteProgram(rippleProgram.program)
         rippleProgram = null
@@ -815,10 +708,9 @@ export function useWebGLGlobe(ctx: WebGLGlobeContext) {
     zoomBy,
     startAutoRotate,
     stopAutoRotate,
-    drawArc,
     drawRipple,
     destroy,
 
-    hasActiveAnimations: () => activeArcs.length > 0 || activeRipples.length > 0,
+    hasActiveAnimations: () => activeRipples.length > 0,
   }
 }

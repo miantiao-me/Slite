@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const MIGRATE_TABS = ['links-export', 'links-import', 'access-export', 'backup', 'd1'] as const
+const MIGRATE_TABS = ['links-export', 'links-import', 'access-export', 'backup'] as const
 type MigrateTab = typeof MIGRATE_TABS[number]
 
 const DEFAULT_TAB: MigrateTab = 'links-export'
@@ -86,11 +86,6 @@ watch(
         >
           {{ $t('migrate.backup.title') }}
         </TabsTrigger>
-        <TabsTrigger
-          value="d1"
-        >
-          {{ $t('migrate.d1.title') }}
-        </TabsTrigger>
       </TabsList>
     </div>
 
@@ -121,13 +116,6 @@ watch(
       :hidden="activeTab !== 'backup'"
     >
       <DashboardMigrateBackup />
-    </TabsContent>
-    <TabsContent
-      value="d1"
-      force-mount
-      :hidden="activeTab !== 'd1'"
-    >
-      <DashboardMigrateD1 />
     </TabsContent>
   </Tabs>
 </template>

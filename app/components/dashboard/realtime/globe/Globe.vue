@@ -26,7 +26,7 @@ let textureResizePending = false
 let trafficListening = false
 
 const globeData = useGlobeData()
-const { arcColor, colors, countryColorTiers, heatmapColorTiers } = useGlobeColors()
+const { rippleColor, colors, countryColorTiers, heatmapColorTiers } = useGlobeColors()
 
 const globe = useWebGLGlobe({
   canvasRef,
@@ -46,11 +46,9 @@ const globe = useWebGLGlobe({
 })
 
 const trafficEvent = useTrafficEvent({
-  colos: globeData.colos,
-  arcColor,
+  rippleColor,
   globe: {
     isReady: () => globe.isReady.value,
-    drawArc: globe.drawArc,
     drawRipple: globe.drawRipple,
   },
 })
@@ -96,7 +94,6 @@ async function initialize() {
   initializationController?.abort()
   trafficEventBus.setReady(false)
   globe.destroy()
-  trafficEvent.cleanup()
   if (trafficListening) {
     trafficEventBus.off(trafficEvent.handleTrafficEvent)
     trafficListening = false
@@ -163,7 +160,6 @@ function handleContextLost(event: Event) {
   initializationController?.abort()
   globe.destroy()
   trafficEventBus.setReady(false)
-  trafficEvent.cleanup()
   if (trafficListening) {
     trafficEventBus.off(trafficEvent.handleTrafficEvent)
     trafficListening = false
@@ -217,7 +213,6 @@ onBeforeUnmount(() => {
   trafficEventBus.setReady(false)
   if (trafficListening)
     trafficEventBus.off(trafficEvent.handleTrafficEvent)
-  trafficEvent.cleanup()
 })
 </script>
 

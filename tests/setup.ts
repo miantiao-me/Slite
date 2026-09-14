@@ -1,6 +1,11 @@
-import { applyD1Migrations, env } from 'cloudflare:test'
-import { beforeAll } from 'vitest'
+import { afterAll, beforeAll } from 'vitest'
+import { server } from './utils'
 
 beforeAll(async () => {
-  await applyD1Migrations(env.DB, env.TEST_MIGRATIONS)
+  if (server.requested)
+    await server.start()
+})
+
+afterAll(async () => {
+  await server.dispose()
 })

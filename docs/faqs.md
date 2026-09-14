@@ -1,83 +1,29 @@
----
-title: Troubleshooting
-description: Fix common deploy, login, analytics, redirect, import, backup, and feature problems.
----
-
 # Troubleshooting
 
-## I cannot create or open short links
+## The application cannot start or write data
 
-1. Confirm D1 and KV are bound with the exact names `DB` and `KV`
-2. Redeploy the latest `master` branch
-3. Open **Dashboard → Links** once (one-time storage setup)
+Use Node.js 24 or newer. Confirm `/data` (or `NUXT_DATA_DIR`) is writable by the process and that `NUXT_SITE_TOKEN`, when set, is at least 8 characters. Check container logs. Only one process may use the directory; stop other containers or development servers that have it open.
 
-If you see **“storage not ready” (HTTP 423)**, step 3 is missing. New installs only need that one open. Very old KV-only installs need [storage migration](/storage/kv-to-d1).
+## Cannot sign in to the dashboard
 
-<details>
-  <summary><b>KV binding screenshot</b></summary>
-  <img alt="KV binding settings in Cloudflare" src="./images/faqs-kv.png">
-</details>
+Set `NUXT_SITE_TOKEN` to a value of at least 8 characters and restart the process. Without it, Slite generates a random token for that process only and never exposes it, so the dashboard and every API request return 401. The generated value changes on each restart.
 
-## I cannot sign in or call the API
+## Data disappeared after replacing a container
 
-The password must match `NUXT_SITE_TOKEN` exactly (no extra spaces). Use at least 8 characters. If you never set the token, a random build-time password may have been used — set an explicit secret and redeploy.
+Check that the same persistent local volume is mounted at `/data`. Data in a container's writable layer is not durable. Do not use `docker compose down -v` during upgrades.
 
-If you use Cloudflare Access:
+## Country and city charts are empty
 
-- Both `NUXT_CF_ACCESS_TEAM_DOMAIN` and `NUXT_CF_ACCESS_AUD` are set
-- The AUD value is from this Access application
-- The Access cookie can reach `/api` (do not limit Cookie Path to `/dashboard` only)
+First, check which GeoIP database the process resolved. Release Docker images bundle DB-IP City Lite, so country, region, city, and coordinates work without extra setup; a source build or custom image without a readable database fails open and leaves geographic fields empty. City Lite has no time-zone or postcode data. Enabling proxy trust does not add geographic metadata; it only changes which client IP is trusted. See [GeoIP database](/deployment/docker#geoip-database).
 
-## Analytics is empty
+## Client addresses are incorrect behind a proxy
 
-Check all of these:
+Keep proxy trust disabled unless the application is reachable only through a trusted proxy. Configure that proxy to overwrite forwarded headers before setting `NUXT_TRUST_PROXY=true`.
 
-1. Analytics Engine is bound as `ANALYTICS`
-2. Dataset name matches (`sink` by default, or the same as `NUXT_DATASET`)
-3. `NUXT_CF_ACCOUNT_ID` is the account that hosts this app
-4. `NUXT_CF_API_TOKEN` is a Custom Token with **Account → Account Analytics → Read**
-5. Bot filtering or dashboard filters are not hiding the traffic
+## AI is unavailable
 
-Full steps: [Analytics](/features/analytics).
+`NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are empty by default; set both to enable AI. Check provider access and the selected model. `NUXT_AI_API_KEY` can be empty when the provider does not require one. AI is optional; ordinary links work without it.
 
-<details>
-  <summary><b>Analytics Engine binding screenshot</b></summary>
-  <img alt="Analytics Engine binding settings in Cloudflare" src="./images/faqs-Analytics_engine.png">
-</details>
+## How do I migrate or restore?
 
-## Realtime events arrive in bursts or feel delayed
-
-Expected. The page refreshes about every 10 seconds and plays events at about one per second. It is not a live WebSocket stream. Also check that the view is not paused and the tab is visible.
-
-## Custom short codes lose uppercase letters
-
-Set `NUXT_CASE_SENSITIVE=true` and redeploy. This only affects **custom** codes; auto-generated codes stay lowercase. Existing codes are not renamed.
-
-## Cloaked page is blank or refuses to load
-
-The target site likely blocks embedding. Turn off cloaking, or change the target site if you control it. OAuth and payment pages usually refuse embedding.
-
-## Safe browsing did not change the unsafe flag
-
-Auto-check runs only when create/edit leaves `unsafe` unset. An explicit `true` or `false` always wins. If the DNS check fails, Sink allows the link.
-
-## Import skips or rejects records
-
-- Active short-code conflicts are skipped
-- Invalid records fail validation
-- Expired records are allowed on purpose
-
-Keep each request within half the export page size. Use protected passwords from export — not the masked placeholders in the dashboard UI.
-
-## Backup was not created
-
-1. Confirm `R2` is bound
-2. Open **Dashboard → Links** once if storage is not ready yet (backup returns 423 until then)
-3. Workers scheduled backups: check `NUXT_DISABLE_AUTO_BACKUP` and Cron
-4. Pages: use manual backup only in this repo
-
-## Redirect still looks old
-
-Browser, CDN, or KV cache can delay what you see. Check `NUXT_LINK_CACHE_TTL` and `NUXT_REDIRECT_NO_STORE` in [configuration](/configuration/#advanced-defaults), then confirm the link in the dashboard.
-
-Unknown short codes (`NUXT_NOT_FOUND_REDIRECT`) always use **302**, even when normal redirects use `301`.
+For old instances, [export and import links manually](/features/import-export). For a complete Slite restore, use a [stopped-instance copy of all `/data`](/features/backups). Link backups alone do not restore analytics or images.

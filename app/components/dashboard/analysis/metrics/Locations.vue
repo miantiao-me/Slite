@@ -128,6 +128,19 @@ function tooltipTemplate(d: any): string {
   >
     <CardHeader>
       <CardTitle><h2>{{ $t('dashboard.locations') }}</h2></CardTitle>
+      <CardAction>
+        <a
+          href="https://db-ip.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="
+            text-xs text-muted-foreground transition-colors
+            hover:text-foreground
+          "
+        >
+          IP Geolocation by DB-IP
+        </a>
+      </CardAction>
     </CardHeader>
     <CardContent class="relative min-h-64 flex-1" :aria-busy="loading || mapLoading">
       <div

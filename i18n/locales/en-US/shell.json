@@ -17,11 +17,11 @@
     "links": {
       "documentation": "Documentation",
       "api_reference": "API Reference",
-      "documentation_aria_label": "Open Sink documentation (opens in a new tab)",
+      "documentation_aria_label": "Open Slite documentation (opens in a new tab)",
       "resources_aria_label": "Resources",
       "skip_to_content": "Skip to content",
       "home_aria_label": "Home",
-      "github_aria_label": "Sink on GitHub"
+      "github_aria_label": "Slite on GitHub"
     }
   },
   "nav": {

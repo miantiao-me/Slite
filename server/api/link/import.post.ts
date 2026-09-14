@@ -40,7 +40,7 @@ defineRouteMeta({
                     redirectWithQuery: { type: 'boolean', description: 'Append query parameters to destination URL' },
                     password: { type: 'string', description: 'Password protection for the link' },
                     unsafe: { type: 'boolean', description: 'Mark link as unsafe, showing a warning page before redirect' },
-                    geo: { type: 'object', additionalProperties: { type: 'string' }, description: 'Geo-routing rules (country code to URL)' },
+                    geo: { type: 'object', additionalProperties: { type: 'string' }, description: 'Geo redirect rules keyed by ISO 3166-1 alpha-2 country code; round-trip preserved and used for country-based redirects when a GeoIP database is loaded' },
                     tags: { type: 'array', items: { type: 'string' }, description: 'Up to 10 normalized link tags, each 1-32 characters' },
                   },
                 },
@@ -72,54 +72,32 @@ export default eventHandler(async (event) => {
     failedItems: [],
   }
 
-  const chunkSize = 4
-  for (let offset = 0; offset < importData.links.length; offset += chunkSize) {
-    const chunk = importData.links.slice(offset, offset + chunkSize)
-    const prepared = await Promise.all(chunk.map(async (linkData, chunkIndex) => {
-      const index = offset + chunkIndex
-
-      try {
-        const slug = normalizeSlug(event, linkData.slug)
-        const now = Math.floor(Date.now() / 1000)
-        const link = {
-          ...linkData,
-          id: linkData.id || nanoid(10)(),
-          slug,
-          createdAt: linkData.createdAt ?? now,
-          updatedAt: linkData.updatedAt ?? now,
-        }
-        if (link.password)
-          link.password = await normalizeLinkPasswordForStorage(link.password)
-        return { index, linkData, link }
+  const now = Math.floor(Date.now() / 1000)
+  for (const [index, linkData] of importData.links.entries()) {
+    let slug = linkData.slug
+    try {
+      slug = normalizeSlug(event, linkData.slug)
+      const link = {
+        ...linkData,
+        id: linkData.id || nanoid(10)(),
+        slug,
+        createdAt: linkData.createdAt ?? now,
+        updatedAt: linkData.updatedAt ?? now,
       }
-      catch (error) {
-        return { index, linkData, error }
-      }
-    }))
-
-    const writable = prepared.filter(item => 'link' in item)
-    const writeResults = await createLinks(event, writable.map(item => item.link!))
-    let writeIndex = 0
-    for (const item of prepared) {
-      if ('error' in item) {
-        result.failed++
-        result.failedItems.push({ index: item.index, slug: item.linkData.slug, url: item.linkData.url, reason: item.error instanceof Error ? item.error.message : 'Unknown error' })
-        continue
-      }
-
-      const writeResult = writeResults[writeIndex++]!
-      if ('error' in writeResult) {
-        result.failed++
-        result.failedItems.push({ index: item.index, slug: item.link.slug, url: item.linkData.url, reason: writeResult.error instanceof Error ? writeResult.error.message : 'Unknown error' })
-      }
-      else if (!writeResult.created) {
-        result.skippedItems.push({ index: item.index, slug: item.link.slug, url: item.linkData.url })
-        result.skipped++
-      }
-      else {
-        result.successItems.push({ index: item.index, slug: item.link.slug, url: item.linkData.url })
+      if (link.password)
+        link.password = await normalizeLinkPasswordForStorage(link.password)
+      if (await createLink(event, link)) {
+        result.successItems.push({ index, slug, url: linkData.url })
         result.success++
       }
+      else {
+        result.skippedItems.push({ index, slug, url: linkData.url })
+        result.skipped++
+      }
+    }
+    catch (error) {
+      result.failed++
+      result.failedItems.push({ index, slug, url: linkData.url, reason: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 

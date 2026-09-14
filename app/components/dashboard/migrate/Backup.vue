@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CloudUpload, Loader } from '@lucide/vue'
+import { Archive, Loader } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 
 const { t } = useI18n()
@@ -44,7 +44,7 @@ async function handleBackup() {
             motion-safe:animate-spin
           "
         />
-        <CloudUpload v-else aria-hidden="true" class="mr-2 size-4" />
+        <Archive v-else aria-hidden="true" class="mr-2 size-4" />
         <template v-if="isBackingUp">
           {{ $t('migrate.backup.backing_up') }}
         </template>

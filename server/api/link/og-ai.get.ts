@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3'
-import type { AiChatResponse } from '../../utils/ai'
+import type { AiMessage } from '../../utils/ai'
 import { z } from 'zod'
-import { parseAiResponse } from '../../utils/ai'
+import { generateAiText, parseAiResponse, requireAiConfig } from '../../utils/ai'
 
 defineRouteMeta({
   openAPI: {
@@ -38,7 +38,7 @@ function fallbackMetadata(url: string): { title: string, description: string } {
   catch {
     return {
       title: 'Short Link',
-      description: 'Check out this link on Sink.',
+      description: 'Check out this link on Slite.',
     }
   }
 }
@@ -63,46 +63,27 @@ export default eventHandler(async (event) => {
     locale: z.string().optional(),
   }).parse)
   const { url } = query
-  const { cloudflare } = event.context
-  const { AI } = cloudflare.env
-
-  if (!AI) {
-    throw createError({ status: 501, statusText: 'AI not enabled' })
-  }
-
-  const { aiOgPrompt, aiModel } = useRuntimeConfig(event)
+  const { aiOgPrompt } = requireAiConfig(event)
   const locale = resolveMetadataLocale(event, query.locale)
 
-  const markdown = await fetchPageMarkdown(event, url, AI)
-  const userContent = markdown
-    ? `URL: ${url}\n\nPage content:\n${markdown}`
-    : url
-
-  const messages = [
+  const messages: AiMessage[] = [
     { role: 'system', content: `${aiOgPrompt}\nGenerate the title and description in the language matching this locale: ${locale}.` },
 
-    { role: 'user', content: 'https://www.cloudflare.com/' },
-    { role: 'assistant', content: '{"title": "Cloudflare", "description": "Cloudflare is a global network designed to make everything you connect to the Internet secure, private, fast, and reliable."}' },
+    { role: 'user', content: 'https://example.com/' },
+    { role: 'assistant', content: '{"title": "Example", "description": "An example page used in documentation."}' },
 
     { role: 'user', content: 'https://github.com/nuxt/' },
     { role: 'assistant', content: '{"title": "Nuxt", "description": "Nuxt is an intuitive and extensible Vue framework for creating modern web applications."}' },
 
-    { role: 'user', content: userContent },
+    { role: 'user', content: url },
   ]
 
-  let response: AiChatResponse
+  let response: string
   try {
-    // @ts-expect-error Workers AI supports model-specific chat template options at runtime.
-    response = await AI.run(aiModel as keyof AiModels, {
-      messages,
-      chat_template_kwargs: {
-        enable_thinking: false,
-        thinking: false,
-      },
-    }) as AiChatResponse
+    response = await generateAiText(event, messages)
   }
   catch (error) {
-    console.warn('Workers AI metadata generation failed; using fallback.', error)
+    console.warn('AI metadata generation failed; using fallback.', error)
     return fallbackMetadata(url)
   }
 

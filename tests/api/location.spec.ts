@@ -1,27 +1,37 @@
 import { describe, expect, it } from 'vitest'
-import { fetch, fetchWithAuth } from '../utils'
+import { fetch, server, useTestServer } from '../utils'
+
+useTestServer()
 
 describe('/api/location', () => {
-  it('returns location data with valid auth', async () => {
-    const response = await fetchWithAuth('/api/location')
+  it('stays public and omits missing coordinates', async () => {
+    const response = await fetch('/api/location')
 
     expect(response.status).toBe(200)
 
     const data = await response.json()
-    // In test environment, cf object may be undefined, so response could be empty or have undefined values
-    expect(data).toBeTypeOf('object')
+    expect(data).toEqual({})
   })
 
   it('returns correct response structure', async () => {
-    const response = await fetchWithAuth('/api/location')
+    const response = await fetch('/api/location')
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toContain('application/json')
   })
 
-  it('returns 401 when accessing without auth', async () => {
-    const response = await fetch('/api/location')
+  it('ignores proxy geolocation headers even when proxy trust is enabled', async () => {
+    await server.restart({ NUXT_TRUST_PROXY: 'true' })
+    try {
+      const response = await fetch('/api/location', {
+        headers: { 'cf-iplatitude': '37.7749', 'cf-iplongitude': '-122.4194' },
+      })
 
-    expect(response.status).toBe(401)
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({})
+    }
+    finally {
+      await server.restart()
+    }
   })
 })

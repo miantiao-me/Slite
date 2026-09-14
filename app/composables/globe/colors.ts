@@ -6,7 +6,7 @@ export function useGlobeColors() {
   const colorMode = useColorMode()
   const isDark = computed(() => colorMode.value === 'dark')
 
-  const arcColor = computed(() =>
+  const rippleColor = computed(() =>
     isDark.value ? 'oklch(0.85 0.15 70)' : 'oklch(0.8 0.12 65)',
   )
 
@@ -31,7 +31,7 @@ export function useGlobeColors() {
 
   return {
     isDark,
-    arcColor,
+    rippleColor,
     colors,
     countryColorTiers,
     heatmapColorTiers,

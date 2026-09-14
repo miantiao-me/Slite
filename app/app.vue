@@ -3,6 +3,7 @@ import 'vue-sonner/style.css'
 
 const { title, description, image } = useAppConfig()
 const route = useRoute()
+const requestURL = useRequestURL()
 const localeHead = useLocaleHead()
 const colorMode = useColorMode()
 
@@ -35,7 +36,7 @@ useHead(() => ({
   link: [
     {
       rel: 'canonical',
-      href: computed(() => `https://sink.cool${route.path}`),
+      href: computed(() => new URL(route.path, requestURL.origin).toString()),
     },
     {
       rel: 'icon',
