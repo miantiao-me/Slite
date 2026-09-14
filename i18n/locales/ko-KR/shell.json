@@ -17,11 +17,11 @@
     "links": {
       "documentation": "문서",
       "api_reference": "API 레퍼런스",
-      "documentation_aria_label": "Sink 문서 열기(새 탭에서 열림)",
+      "documentation_aria_label": "Slite 문서 열기(새 탭에서 열림)",
       "resources_aria_label": "리소스",
       "skip_to_content": "주요 콘텐츠로 건너뛰기",
       "home_aria_label": "홈",
-      "github_aria_label": "GitHub의 Sink"
+      "github_aria_label": "GitHub의 Slite"
     }
   },
   "nav": {

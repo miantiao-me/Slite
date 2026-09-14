@@ -1,11 +1,12 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../.nuxt/tsconfig.json",
   "compilerOptions": {
     "target": "esnext",
+    "lib": ["esnext", "dom", "dom.iterable", "dom.asynciterable"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "types": ["node", "vite/client"],
     "skipLibCheck": true
   },
-  "include": ["./**/*.ts", "../worker-configuration.d.ts"]
+  "include": ["./**/*.ts", "../vitest.config.ts", "../.nuxt/nuxt.d.ts", "../.nuxt/types/nitro-imports.d.ts"]
 }

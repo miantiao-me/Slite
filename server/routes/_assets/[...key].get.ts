@@ -3,7 +3,6 @@ import { SlugSchema } from '#shared/schemas/link'
 const slugValidator = SlugSchema
 
 export default eventHandler(async (event) => {
-  const R2 = requireR2Bucket(event.context.cloudflare.env)
   const key = getRouterParam(event, 'key')
 
   if (!key) {
@@ -17,7 +16,7 @@ export default eventHandler(async (event) => {
 
   // Validate slug in path: images/{slug}/{filename}
   const parts = key.split('/')
-  if (parts.length < 3) {
+  if (parts.length !== 3) {
     throw createError({ status: 400, statusText: 'Invalid path format' })
   }
 
@@ -27,17 +26,18 @@ export default eventHandler(async (event) => {
     throw createError({ status: 400, statusText: 'Invalid slug format' })
   }
 
-  const object = await R2.get(key)
+  const object = await readStoredImage(key)
 
   if (!object) {
     throw createError({ status: 404, statusText: 'Image not found' })
   }
 
-  const contentType = object.httpMetadata?.contentType || 'application/octet-stream'
+  const contentType = object.contentType
 
   setHeader(event, 'Content-Type', contentType)
   setHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable')
   setHeader(event, 'ETag', object.etag)
+  setHeader(event, 'X-Content-Type-Options', 'nosniff')
 
   return object.body
 })

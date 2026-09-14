@@ -1,29 +1,13 @@
----
-title: Upgrading Sink
-description: Upgrade Sink by syncing your GitHub fork and redeploying.
----
+# Upgrading Slite
 
-# Upgrading Sink
+1. Record the current source revision and save configuration securely.
+2. Stop the container and take a [complete data backup](/features/backups).
+3. Update to the intended source revision.
+4. Rebuild and start with `docker compose up -d --build`, retaining the existing `/data` volume.
+5. Inspect logs, sign in, and verify a short-link redirect and analytics.
 
-## Before you upgrade
+Only one process may open the data directory. Do not run old and new containers simultaneously against it. If an upgrade changes data formats, rolling back the application alone may not be sufficient: stop the container and restore the matching full data backup and application revision.
 
-1. Skim the upstream release notes
-2. Do not delete your Cloudflare bindings, secrets, or env vars
-3. If R2 is set up, consider a manual [backup](/features/backups)
+## Moving an existing instance
 
-## Normal upgrade (current D1 installs)
-
-1. On GitHub, open your fork → click **Sync fork** to pull the latest `master`. If you changed files yourself, resolve conflicts first
-2. In Cloudflare (Workers Builds or Pages), redeploy the updated `master` branch
-3. Wait for the deploy to finish (database updates run as part of deploy)
-
-## Upgrading a very old install (links only in KV)
-
-If your instance stored links only in KV (older Sink versions), keep that KV data and follow [storage setup / migration](/storage/kv-to-d1).
-
-## After upgrade — quick check
-
-- Sign in to the dashboard
-- Open **Dashboard → Links** once (finishes storage setup if needed)
-- Create, open, edit, and delete a test link
-- Check analytics if you use it
+Export links from the old instance and import them manually into Slite. Keep the old instance available until you have verified the imported links. Transfer image files separately and check any absolute image URLs. Analytics is not included in link exports.

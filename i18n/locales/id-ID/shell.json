@@ -17,11 +17,11 @@
     "links": {
       "documentation": "Dokumentasi",
       "api_reference": "Referensi API",
-      "documentation_aria_label": "Buka dokumentasi Sink (terbuka di tab baru)",
+      "documentation_aria_label": "Buka dokumentasi Slite (terbuka di tab baru)",
       "resources_aria_label": "Sumber daya",
       "skip_to_content": "Lompat ke konten utama",
       "home_aria_label": "Beranda",
-      "github_aria_label": "Sink di GitHub"
+      "github_aria_label": "Slite di GitHub"
     }
   },
   "nav": {

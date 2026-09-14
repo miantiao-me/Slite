@@ -1,48 +1,13 @@
----
-title: 访问分析与近实时视图
-description: 启用访问分析、查看图表和日志、了解近实时视图、排除机器人并导出 CSV。
----
+# 访问分析与实时视图
 
-# 访问分析与近实时视图
+Slite 将分析数据保存在本地的 `/data/analytics.duckdb` 文件中。控制面板通过查询这些数据展示点击趋势、来源站点、设备类型、浏览器及其他统计维度。该文件应作为[停机完整备份](/zh-CN/features/backups)的一部分予以保留。
 
-访问分析是**可选**功能。不配置时，短链、登录和链接管理仍可用 — 图表、日志和近实时视图会是空的。
+每次访问事件均会记录完整的客户端 IP 地址、完整的 User-Agent 字符串、来源域名、`Accept-Language` 中的首选语言、解析出的操作系统、浏览器与设备类型，以及匹配出的国家、地区、城市和地理坐标。由于完整记录了 IP 地址，请将 `/data/analytics.duckdb` 视为包含个人数据的文件。Slite 目前没有内置自动的分析数据保留期限清理机制，访问事件会一直保留至该文件被删除或替换；运维人员应根据自身业务制定并公示相应的数据保留与用户告知政策。
 
-## 如何启用（三样都要）
+仪表盘接口负责聚合这些统计数据。`GET /api/logs/events` 接口返回最近的访问事件，且会剔除存储的 IP 地址，其余事件字段仅对通过认证的仪表盘请求开放。
 
-需要同时具备：
+地理位置字段来自解析到的 GeoIP 数据库：正式发布版 Docker 镜像内置了 DB-IP City Lite，提供国家、地区、城市和坐标，但不包含时区或邮政编码数据。未挂载可读数据库的实例会平稳回退，因此地图或国家分布为空并不代表短链接跳转失败。`NUXT_TRUST_PROXY` 仅控制信任哪个客户端 IP，本身不提供地理位置信息。加载优先级参见 [GeoIP 数据库](/zh-CN/deployment/docker#geoip-database)。
 
-1. **Analytics Engine 绑定**，名称必须是 `ANALYTICS`
-   - **Workers：** 通常由部署配置生成（数据集默认 `sink`）
-   - **Pages：** **Settings → Bindings → Add → Analytics Engine**
-   - 变量名：`ANALYTICS`
-   - 数据集：默认 `sink`。若设置了 `NUXT_DATASET`，这里必须相同
+实时仪表盘约每 10 秒轮询一次，并以约每秒一条的频率重放队列中的事件。暂停时会停止轮询、重放及 WebGL 动效。该界面属于伪实时视图，并非基于 SSE 或 WebSocket 长连接。
 
-2. **账户 ID** — 把 `NUXT_CF_ACCOUNT_ID` 设为承载本应用的 Cloudflare 账户 ID  
-   （仪表盘侧边栏账户名，或登录后 URL 里可见）
-
-3. **API 令牌** — 把 `NUXT_CF_API_TOKEN` 设为加密密钥：
-   - Cloudflare 仪表盘 → 右上角头像 → **My Profile** → **API Tokens** → **Create Token** → **Custom Token**
-   - 权限仅需：**Account → Account Analytics → Read**
-   - 建议限制到同一账户
-
-缺一或名称不一致，访问分析会一直为空。
-
-## 能看到什么
-
-成功的访问会进入计数器、图表、热力图、最近事件和位置。可按链接、时间、国家/地区、浏览器、系统、设备、来源筛选。
-
-数字可能是**近似值**（Cloudflare 会对大流量采样）。低流量时也可能看起来不均匀。
-
-要从统计和[点击 Webhook](/zh-CN/configuration/webhooks) 排除机器人，设置 `NUXT_DISABLE_BOT_ACCESS_LOG=true`。
-
-## 近实时页面
-
-::: tip 不是真正的实时流
-这个页面**不用** WebSocket。大约每 10 秒刷新一次，并以大约每秒 1 个事件回放。暂停或标签页隐藏会停止回放。请当作“看起来像实时”的概览，而不是完整事件流。
-:::
-
-## 导出
-
-可在仪表盘或统计导出 API 下载筛选后的 CSV（短链码、URL、访客、访问量、来源等）。
-
-链接 JSON 导出是另一项功能 — 见[导入/导出](./import-export)。
+系统仅支持单进程和本地存储。分析数据库文件不支持由多个 Slite 副本并发访问。

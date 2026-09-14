@@ -17,11 +17,11 @@
     "links": {
       "documentation": "Tài liệu",
       "api_reference": "Tham chiếu API",
-      "documentation_aria_label": "Mở tài liệu Sink (mở trong thẻ mới)",
+      "documentation_aria_label": "Mở tài liệu Slite (mở trong thẻ mới)",
       "resources_aria_label": "Tài nguyên",
       "skip_to_content": "Chuyển đến nội dung chính",
       "home_aria_label": "Trang chủ",
-      "github_aria_label": "Sink trên GitHub"
+      "github_aria_label": "Slite trên GitHub"
     }
   },
   "nav": {

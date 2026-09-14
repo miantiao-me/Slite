@@ -5,6 +5,7 @@ import { ImportDataSchema } from '#shared/schemas/import'
 import { createExportFilename } from '#shared/utils/export-file'
 import { useAPI } from '@/utils/api'
 import { saveAsJson } from '@/utils/file'
+import { resolveImportBatchSize, toPositiveInteger } from '@/utils/import-batch'
 
 type ImportStatus = 'selecting' | 'ready' | 'importing' | 'complete'
 
@@ -27,7 +28,9 @@ function emptyResult(): ImportResult {
 
 export function useLinkImport(options: UseLinkImportOptions = {}) {
   const { t } = useI18n()
-  const batchSize = options.batchSize ?? Math.floor(+useRuntimeConfig().public.kvBatchLimit / 2)
+  const batchSize = options.batchSize === undefined
+    ? resolveImportBatchSize(useRuntimeConfig().public.importBatchLimit)
+    : toPositiveInteger(options.batchSize)
   const requestImport = options.requestImport ?? (data => useAPI<ImportResult>('/api/link/import', {
     method: 'POST',
     body: data,
@@ -164,7 +167,7 @@ export function useLinkImport(options: UseLinkImportOptions = {}) {
       exportedAt: new Date().toISOString(),
       count: links.length,
       links,
-    }, createExportFilename(`sink-import-${filename}`, 'json'))
+    }, createExportFilename(`slite-import-${filename}`, 'json'))
   }
 
   function downloadSuccessItems() {

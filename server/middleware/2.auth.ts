@@ -4,28 +4,19 @@ export default eventHandler(async (event) => {
   if (!event.path.startsWith('/api/'))
     return
 
-  const token = getHeader(event, 'Authorization')?.replace(/^Bearer\s+/, '')
-  if (await verifySiteToken(token, useRuntimeConfig(event).siteToken)) {
+  // Sink keeps GET /api/location public; every other API route requires auth.
+  if (getRequestURL(event).pathname === '/api/location')
+    return
+
+  const token = getHeader(event, 'Authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1]
+  // The storage plugin generates a process-only token when none is configured
+  // and exposes it through the request context.
+  const expectedSiteToken = useRuntimeConfig(event).siteToken || event.context.generatedSiteToken
+  if (await verifySiteToken(token, expectedSiteToken)) {
     event.context.authMethod = 'site-token'
     event.context.userID = 'root'
     event.context.userEmail = `root@${getRequestURL(event).hostname}`
     return
-  }
-
-  const accessIdentity = await verifyCloudflareAccess(event)
-  if (accessIdentity) {
-    if (isCloudflareAccessRequestAllowed(event)) {
-      Object.assign(
-        event.context,
-        mapCloudflareAccessIdentity(accessIdentity, getRequestURL(event).hostname),
-      )
-      return
-    }
-
-    throw createError({
-      status: 403,
-      statusText: 'Forbidden',
-    })
   }
 
   if (token && token.length < 8) {
@@ -41,7 +32,9 @@ export default eventHandler(async (event) => {
   })
 })
 
-async function verifySiteToken(provided: string | undefined, expected: string): Promise<boolean> {
+async function verifySiteToken(provided: string | undefined, expected: string | undefined): Promise<boolean> {
+  if (!provided || !expected)
+    return false
   const encoder = new TextEncoder()
   const [providedHash, expectedHash] = await Promise.all([
     crypto.subtle.digest('SHA-256', encoder.encode(provided || '')),

@@ -1,6 +1,9 @@
-import { env } from 'cloudflare:workers'
+import { rm } from 'node:fs/promises'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { fetch, fetchWithAuth, TEST_PNG_BYTES } from '../utils'
+import { fetch, fetchWithAuth, server, TEST_PNG_BYTES, useTestServer } from '../utils'
+
+useTestServer()
 
 describe('/api/upload/image', () => {
   it('uploads and serves a PNG with immutable cache metadata', async () => {
@@ -32,13 +35,29 @@ describe('/api/upload/image', () => {
     }
     finally {
       if (key)
-        await env.R2.delete(key)
+        await rm(join(server.dataDir, 'files', key), { force: true })
     }
   })
 
   it('rejects asset paths outside images', async () => {
     const response = await fetch('/_assets/documents/test.txt')
     expect(response.status).toBe(403)
+  })
+
+  it.each(['../escape', '..\\escape', '%2e%2e', '/absolute'])('rejects traversal upload slug %s', async (slug) => {
+    const body = new FormData()
+    body.append('file', new File([TEST_PNG_BYTES], 'fixture.png', { type: 'image/png' }))
+    body.append('slug', slug)
+    expect((await fetchWithAuth('/api/upload/image', { method: 'POST', body })).status).toBe(400)
+  })
+
+  it.each([
+    '/_assets/images/test/%2e%2e%2f%2e%2e%2fslite.sqlite',
+    '/_assets/images/test/%5c..%5cslite.sqlite',
+    '/_assets/images/test/file.png%00',
+  ])('rejects unsafe asset path %s', async (path) => {
+    const response = await fetch(path)
+    expect([400, 403, 404]).toContain(response.status)
   })
 
   it('returns 400 when file is missing', async () => {

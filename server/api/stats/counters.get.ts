@@ -1,22 +1,30 @@
-import type { H3Event } from 'h3'
 import type { RawBuilder } from 'kysely'
 import { sql } from 'kysely'
 import { QuerySchema } from '#shared/schemas/query'
 
-function weightedDistinct(column: string): RawBuilder<number> {
-  return sql<number>`ROUND(COUNT(DISTINCT ${sql.ref(column)}) * SUM(_sample_interval) / COUNT())`
+defineRouteMeta({
+  openAPI: {
+    description: 'Get access visit, visitor, and referer counters',
+    security: [{ bearerAuth: [] }],
+  },
+})
+
+function distinctCount(column: string): RawBuilder<number> {
+  return sql<number>`COUNT(DISTINCT ${sql.ref(column)})`
 }
 
-function query2sql(query: Query, event: H3Event) {
+function distinctReferers(column: string): RawBuilder<number> {
+  return sql<number>`COUNT(DISTINCT NULLIF(${sql.ref(column)}, ${''}))`
+}
+
+function query2sql(query: Query) {
   const filter = buildAnalyticsFilter(query)
-  const { dataset } = useRuntimeConfig(event)
-  const analyticsQuery = createAnalyticsQuery(dataset)
+  const analyticsQuery = createAnalyticsQuery()
   const filteredQuery = filter ? analyticsQuery.where(filter) : analyticsQuery
-  // Weighted distinct count: COUNT(DISTINCT col) * SUM(_sample_interval) / COUNT() ≈ actual distinct count
   const statement = filteredQuery.select([
-    sql<number>`SUM(_sample_interval)`.as('visits'),
-    weightedDistinct(logsMap.ip!).as('visitors'),
-    weightedDistinct(logsMap.referer!).as('referers'),
+    sql<number>`COUNT(*)`.as('visits'),
+    distinctCount(logsMap.ip!).as('visitors'),
+    distinctReferers(logsMap.referer!).as('referers'),
   ])
 
   return query.id
@@ -26,6 +34,6 @@ function query2sql(query: Query, event: H3Event) {
 
 export default eventHandler(async (event) => {
   const query = await getValidatedQuery(event, QuerySchema.parse)
-  const sql = query2sql(query, event)
-  return useWAE(event, sql)
+  const sql = query2sql(query)
+  return useAnalytics(event, sql)
 })

@@ -38,4 +38,9 @@ export default eventHandler(async (event) => {
   const body = await readValidatedBody(event, DeleteSchema.parse)
   const slug = normalizeSlug(event, body.slug)
   await deleteLink(event, slug)
+
+  // Sink responds 200 with an empty body; an undefined handler return would
+  // become 204 No Content in the current h3/Nitro stack.
+  setResponseStatus(event, 200)
+  return send(event, '')
 })

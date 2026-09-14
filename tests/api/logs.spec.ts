@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { fetch, fetchWithAuth } from '../utils'
+import { fetch, fetchWithAuth, useTestServer } from '../utils'
+
+useTestServer()
 
 describe('/api/logs/events', () => {
   it('returns events data with valid auth', async () => {

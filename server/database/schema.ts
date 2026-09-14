@@ -40,28 +40,3 @@ export const linkTags = sqliteTable('link_tags', {
   primaryKey({ columns: [table.linkSlug, table.tagName] }),
   index('link_tags_tag_name_link_slug_idx').on(table.tagName, table.linkSlug),
 ])
-
-export const linkTombstones = sqliteTable('link_tombstones', {
-  slug: text().primaryKey(),
-  deletedAt: integer('deleted_at').notNull(),
-})
-
-export const linkMigrationRuns = sqliteTable('link_migration_runs', {
-  id: text().primaryKey(),
-  expectedCursor: text('expected_cursor'),
-  scanned: integer().notNull().default(0),
-  inserted: integer().notNull().default(0),
-  skipped: integer().notNull().default(0),
-  expired: integer().notNull().default(0),
-  force: integer({ mode: 'boolean' }).notNull(),
-  status: text({ enum: ['running', 'completed'] }).notNull().default('running'),
-  createdAt: integer('created_at').notNull(),
-  updatedAt: integer('updated_at').notNull(),
-}, table => [
-  index('link_migration_runs_status_updated_at_desc_created_at_desc_id_desc_idx').on(
-    table.status,
-    sql`${table.updatedAt} desc`,
-    sql`${table.createdAt} desc`,
-    sql`${table.id} desc`,
-  ),
-])

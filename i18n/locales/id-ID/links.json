@@ -1,13 +1,5 @@
 {
   "links": {
-    "migration_gate": {
-      "loading": "Menyiapkan tautan Anda",
-      "scanned": "{count} tautan dipindai",
-      "failed_title": "Migrasi tautan gagal",
-      "failed_description": "Tautan tidak tersedia hingga migrasi KV ke D1 selesai.",
-      "retry": "Coba lagi",
-      "open_migration": "Buka alat migrasi"
-    },
     "create": "Buat Tautan",
     "edit": "Edit Tautan",
     "delete_success": "Berhasil dihapus!",

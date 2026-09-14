@@ -15,8 +15,8 @@
         "description": "Pantau analitik tautan dan kumpulkan statistik"
       },
       "serverless": {
-        "title": "Serverless",
-        "description": "Deploy tanpa perlu server tradisional"
+        "title": "Dihosting sendiri",
+        "description": "Jalankan Slite di server Anda sendiri dengan Docker"
       },
       "customizable_slug": {
         "title": "Slug Kustom",
@@ -24,7 +24,7 @@
       },
       "ai_slug": {
         "title": "Bantuan AI",
-        "description": "Buat slug dan metadata OpenGraph dari konten halaman"
+        "description": "Buat slug dan metadata OpenGraph dari URL"
       },
       "link_expiration": {
         "title": "Kontrol Tautan",
@@ -32,7 +32,7 @@
       },
       "device_routing": {
         "title": "Routing Cerdas",
-        "description": "Alihkan pengunjung berdasarkan perangkat atau negara"
+        "description": "Arahkan pengunjung Apple dan Android ke tujuan yang berbeda"
       },
       "og_preview": {
         "title": "Pratinjau Sosial",
@@ -48,7 +48,7 @@
       },
       "import_export": {
         "title": "Impor/Ekspor",
-        "description": "Transfer tautan secara massal dengan JSON dan ekspor analitik akses sebagai CSV"
+        "description": "Transfer tautan secara massal dengan JSON dan ekspor analitik sebagai CSV"
       },
       "multi_language": {
         "title": "Multibahasa",
@@ -56,25 +56,25 @@
       }
     },
     "cta": {
-      "title": "Deploy Sink",
-      "description": "Ikuti panduan memulai untuk mengonfigurasi dan men-deploy Sink di Cloudflare",
-      "button": "Baca Panduan Deploy"
+      "title": "Jalankan Slite sendiri",
+      "description": "Jalankan Slite dengan Docker di server Anda sendiri",
+      "button": "Baca panduan penyiapan"
     },
     "logos": {
-      "title": "Dibangun dengan teknologi terbaik"
+      "title": "Berjalan di server Anda sendiri"
     },
     "twitter": {
       "follow": "Ikuti di X (Twitter)"
     },
     "stats": {
-      "title": "Sink dalam Angka",
-      "subtitle": "Dipercaya oleh developer di seluruh dunia",
+      "title": "Slite dalam Angka",
+      "subtitle": "Open source di GitHub",
       "stars": "Bintang di GitHub",
       "forks": "Fork"
     },
     "testimonials": {
       "title": "Disukai Pengguna",
-      "subtitle": "Lihat apa kata developer tentang Sink"
+      "subtitle": "Lihat apa kata developer tentang Slite"
     }
   }
 }

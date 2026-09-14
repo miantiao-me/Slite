@@ -85,22 +85,6 @@ export const StoredLinkSchema = LinkFieldsSchema.extend({
   expiration: TimestampSchema.optional(),
 })
 
-export function parseLegacyKvLink(value: unknown, slug: string) {
-  if (!value || typeof value !== 'object' || Array.isArray(value))
-    return StoredLinkSchema.safeParse(value)
-
-  const link = value as Record<string, unknown>
-  const now = Math.floor(Date.now() / 1000)
-  const isEmpty = (field: unknown) => field === undefined || field === null || (typeof field === 'string' && !field.trim())
-  return StoredLinkSchema.safeParse({
-    ...link,
-    id: isEmpty(link.id) ? nanoid(10)() : link.id,
-    slug: isEmpty(link.slug) ? slug : link.slug,
-    createdAt: isEmpty(link.createdAt) ? now : link.createdAt,
-    updatedAt: isEmpty(link.updatedAt) ? now : link.updatedAt,
-  })
-}
-
 export type Link = z.infer<typeof StoredLinkSchema>
 export type EditLink = z.infer<typeof EditLinkSchema>
 

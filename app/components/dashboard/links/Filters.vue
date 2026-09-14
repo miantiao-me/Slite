@@ -7,7 +7,7 @@ interface TagCount {
 }
 
 const linksStore = useDashboardLinksStore()
-const allTagsValue = '__sink_all_tags__'
+const allTagsValue = '__slite_all_tags__'
 const tags = shallowRef<TagCount[]>([])
 const loading = shallowRef(false)
 const error = shallowRef(false)

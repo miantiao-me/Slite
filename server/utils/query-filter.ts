@@ -22,7 +22,7 @@ function inFilter(column: string, values: string[]): RawBuilder<boolean> | undef
   if (!values.length)
     return
 
-  return sql<boolean>`${sql.ref(column)} in (${sql.join(values.map(value => sql.lit(value)))})`
+  return sql<boolean>`${sql.ref(column)} in (${sql.join(values)})`
 }
 
 export function buildAnalyticsFilter(query: Query): RawBuilder<boolean> | undefined {
@@ -41,14 +41,14 @@ export function buildAnalyticsFilter(query: Query): RawBuilder<boolean> | undefi
       filters.push(inFilter(blobKey, queryValues(value))!)
   }
 
-  if (query.startAt) {
+  if (query.startAt !== undefined) {
     const startTimestamp = Math.floor(Number(query.startAt))
-    filters.push(sql<boolean>`${sql.ref('timestamp')} >= toDateTime(${sql.lit(startTimestamp)})`)
+    filters.push(sql<boolean>`${sql.ref('timestamp')} >= to_timestamp(${startTimestamp})`)
   }
 
-  if (query.endAt) {
+  if (query.endAt !== undefined) {
     const endTimestamp = Math.floor(Number(query.endAt))
-    filters.push(sql<boolean>`${sql.ref('timestamp')} <= toDateTime(${sql.lit(endTimestamp)})`)
+    filters.push(sql<boolean>`${sql.ref('timestamp')} <= to_timestamp(${endTimestamp})`)
   }
 
   return filters.length ? sql<boolean>`${sql.join(filters, sql` and `)}` : undefined

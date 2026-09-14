@@ -1,32 +1,55 @@
-import type { LinkCheckResponse } from '../../shared/types/link-check'
-import { env } from 'cloudflare:workers'
-import { eq } from 'drizzle-orm'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { links } from '../../server/database/schema'
-import { db, deleteStoredLinks, postJson, setLinkStoreD1Mode } from '../utils'
+import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import type { LinkCheckResponse, LinkCheckResult } from '../../shared/types/link-check'
+import { once } from 'node:events'
+import { createServer } from 'node:http'
+import { describe, expect, it } from 'vitest'
+import { deleteStoredLinks, expireStoredLink, postJson, useTestServer } from '../utils'
 
-beforeEach(async () => {
-  await setLinkStoreD1Mode()
-})
+useTestServer()
 
 function uniqueSlug(index: number): string {
   return `link-check-${index}-${crypto.randomUUID()}`
 }
 
-async function createStoredLinks(count: number): Promise<{ slug: string, url: string }[]> {
+async function createStoredLinks(
+  count: number,
+  url: (index: number) => string = index => `http://localhost/link-check/${index}`,
+): Promise<{ slug: string, url: string }[]> {
   const links = Array.from({ length: count }, (_, index) => ({
     slug: uniqueSlug(index),
-    url: `http://localhost/link-check/${index}`,
+    url: url(index),
   }))
   for (const link of links)
     expect((await postJson('/api/link/create', link)).status).toBe(201)
   return links
 }
 
+async function findCheckResults(slugs: string[]): Promise<Map<string, LinkCheckResult>> {
+  const wanted = new Set(slugs)
+  const found = new Map<string, LinkCheckResult>()
+  let cursor: string | undefined
+
+  for (let pageCount = 0; pageCount < 100; pageCount++) {
+    const response = await postJson('/api/link/check', { cursor, limit: 10, timeout: 1 })
+    expect(response.status).toBe(200)
+    const page = await response.json() as LinkCheckResponse
+    for (const result of page.results) {
+      if (wanted.has(result.slug))
+        found.set(result.slug, result)
+    }
+
+    if (found.size === wanted.size || page.list_complete)
+      break
+    cursor = page.cursor
+  }
+
+  return found
+}
+
 describe('/api/link/check', { concurrent: false }, () => {
   it('checks authoritative links with keyset cursor pagination', async () => {
     const created = await createStoredLinks(11)
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Blocked test outbound request'))
 
     try {
       const checked = new Map<string, string>()
@@ -57,19 +80,15 @@ describe('/api/link/check', { concurrent: false }, () => {
         expect(checked.get(link.slug)).toBe(link.url)
     }
     finally {
-      fetchSpy.mockRestore()
       await deleteStoredLinks(created.map(link => link.slug))
     }
   })
 
   it('includes expired links and checks their stored URL', async () => {
     const [link] = await createStoredLinks(1)
-    const expiredAt = Math.floor(Date.now() / 1000) - 60
-    await db.update(links)
-      .set({ expiration: expiredAt, effectiveExpiresAt: expiredAt })
-      .where(eq(links.slug, link.slug))
-    await env.KV.delete(`link:${link.slug}`)
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Blocked test outbound request'))
+    if (!link)
+      throw new Error('Missing link fixture')
+    await expireStoredLink(link.slug)
 
     try {
       let cursor: string | undefined
@@ -93,8 +112,44 @@ describe('/api/link/check', { concurrent: false }, () => {
       })
     }
     finally {
-      fetchSpy.mockRestore()
       await deleteStoredLinks([link.slug])
+    }
+  })
+
+  it('rejects local, link-local, and loopback targets without connecting', async () => {
+    let privateHits = 0
+    const privateTarget = createServer((_request: IncomingMessage, response: ServerResponse) => {
+      privateHits++
+      response.end('secret')
+    })
+    privateTarget.listen(0, '127.0.0.1')
+    await once(privateTarget, 'listening')
+    const { port } = privateTarget.address() as AddressInfo
+
+    const created = await createStoredLinks(3, index => [
+      `http://127.0.0.1:${port}/private-${index}`,
+      'http://169.254.169.254/latest/meta-data/',
+      'http://[::1]/private',
+    ][index]!)
+
+    try {
+      const results = await findCheckResults(created.map(link => link.slug))
+      expect(results.size).toBe(created.length)
+      for (const link of created) {
+        expect(results.get(link.slug)).toMatchObject({
+          slug: link.slug,
+          url: link.url,
+          status: 0,
+          ok: false,
+          error: 'URL is not allowed for server-side checking',
+        })
+      }
+      expect(privateHits).toBe(0)
+    }
+    finally {
+      await deleteStoredLinks(created.map(link => link.slug))
+      privateTarget.closeAllConnections()
+      await new Promise<void>((resolve, reject) => privateTarget.close(error => error ? reject(error) : resolve()))
     }
   })
 

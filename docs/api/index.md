@@ -1,56 +1,27 @@
----
-title: REST API
-description: OpenAPI docs, authentication, CORS, and endpoint index for Sink.
----
-
 # REST API
 
-## Interactive docs
+Use your own instance's API reference:
 
-Every Sink instance publishes API docs at:
+- `/_docs/openapi.json`: OpenAPI schema
+- `/_docs/scalar`: interactive reference
+- `/_docs/swagger`: Swagger UI
 
-- `https://your-domain/_docs/openapi.json` — machine-readable OpenAPI
-- `https://your-domain/_docs/scalar` — friendly UI
-- `https://your-domain/_docs/swagger` — classic Swagger UI
-
-Use your own domain. Public demo: [https://sink.cool/_docs/scalar](https://sink.cool/_docs/scalar).
-
-## Authentication
-
-Send your site password in the `Authorization` header:
+Authenticate API requests with the configured site token:
 
 ```http
 Authorization: Bearer YOUR_SITE_TOKEN
 ```
 
-(`Bearer` means “here is the token”.) It must match `NUXT_SITE_TOKEN` exactly (at least 8 characters). With [Cloudflare Access](/configuration/cloudflare-access) enabled, browsers can also authenticate with a verified Access login.
+The token must match `NUXT_SITE_TOKEN`. Never put the token in a public client application.
 
-## CORS
+| Group         | Routes                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Links         | `/api/link/create`, `/api/link/edit`, `/api/link/upsert`, `/api/link/delete`, `/api/link/query`, `/api/link/search`, `/api/link/list`, `/api/link/check`, `/api/link/tags` |
+| Import/export | `/api/link/import`, `/api/link/export`                                                                                                                                     |
+| Optional AI   | `/api/link/ai`, `/api/link/og-ai`                                                                                                                                          |
+| Analytics     | `/api/stats/**`, `/api/logs/**`                                                                                                                                            |
+| Utilities     | `/api/verify`, `/api/location`, `/api/upload/image`, `/api/backup`                                                                                                         |
 
-Optional. Set `NUXT_API_CORS=true` at build time to allow browser apps on other sites to call `/api/**`. Login is still required. See [configuration](/configuration/#optional).
+`upsert` returns an existing active short code rather than overwriting it. `check` probes destination URLs from the server. Image uploads use the unstorage filesystem driver under `/data/files/images`. Geographic fields come from the resolved GeoIP database: release Docker images bundle DB-IP City Lite, while an instance without a readable database fails open and leaves them empty. See [GeoIP database](/deployment/docker#geoip-database).
 
-## Before you call link APIs
-
-::: warning Storage must be ready
-Until you open **Dashboard → Links** once after deploy, most `/api/link/**` calls fail with **“storage not ready” (HTTP 423)**. See [storage setup](/storage/kv-to-d1).
-:::
-
-- `upsert` creates when free; if the short code exists, returns it with `status: "existing"` (does **not** overwrite)
-- `search` matches short code, URL, comment, and tags
-- `check` probes target URLs from the server
-- `verify` checks how you are authenticated
-- `location` returns approximate coordinates when Cloudflare provides them
-- Image upload needs R2 (JPEG/PNG/WebP/GIF, max 5 MB)
-
-## Endpoint groups
-
-Use the OpenAPI UI for full request/response details.
-
-| Group         | Routes                                                                                       |
-| ------------- | -------------------------------------------------------------------------------------------- |
-| Links         | `/api/link/create`, `edit`, `upsert`, `delete`, `query`, `search`, `list`, `check`, `tags`   |
-| Import/export | `/api/link/import`, `/api/link/export` — [Import and Export](/features/import-export)        |
-| Storage setup | `/api/link/migration/status`, `/api/link/migration/run` — [storage setup](/storage/kv-to-d1) |
-| AI            | `/api/link/ai`, `/api/link/og-ai` — [Workers AI](/features/ai)                               |
-| Analytics     | `/api/stats/**`, `/api/logs/**` — [Analytics](/features/analytics)                           |
-| Utilities     | `/api/verify`, `/api/location`, `/api/upload/image`, `/api/backup`                           |
+See [import/export](/features/import-export) and [backup scope](/features/backups) before moving data.

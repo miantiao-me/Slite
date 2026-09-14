@@ -1,6 +1,7 @@
 import type { ImportData, ImportResult } from '../../shared/schemas/import'
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLinkImport } from '../../app/composables/useLinkImport'
+import { MAX_IMPORT_BATCH_SIZE } from '../../app/utils/import-batch'
 
 const mocks = vi.hoisted(() => ({
   saveAsJson: vi.fn(),
@@ -13,7 +14,7 @@ const originalGlobals = vi.hoisted(() => {
   const useI18n = Object.getOwnPropertyDescriptor(globalThis, 'useI18n')
   Object.assign(globalThis, {
     useAppConfig: () => ({ slugRegex: /^[a-z0-9]+(?:-[a-z0-9]+)*$/i }),
-    useRuntimeConfig: () => ({ public: { kvBatchLimit: '100', slugDefaultLength: '6' } }),
+    useRuntimeConfig: () => ({ public: { importBatchLimit: '100', slugDefaultLength: '6' } }),
     useI18n: () => ({
       t: (key: string, params?: { count?: number }) => params?.count === undefined
         ? key
@@ -36,6 +37,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers()
+  vi.unstubAllGlobals()
 })
 
 afterAll(() => {
@@ -116,6 +118,40 @@ describe('useLinkImport', () => {
     expect(empty.parseError.value).toBe('migrate.import.errors.invalid_format')
     expect(empty.validationErrors.value).not.toHaveLength(0)
   })
+
+  it.each([0, 'abc', undefined])('never starts an empty or unbounded batch when importBatchLimit is %s', async (value) => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ public: { importBatchLimit: value, slugDefaultLength: '6' } }))
+    const requestImport = vi.fn(async (data: ImportData) => result({ success: data.links.length }))
+    const state = useLinkImport({ delay: async () => undefined, requestImport })
+    await state.handleFile(jsonFile({ version: '1.0', links: [link(0), link(1), link(2)] }))
+
+    await state.importLinks()
+
+    expect(requestImport).toHaveBeenCalledTimes(3)
+    for (const [data] of requestImport.mock.calls)
+      expect(data.links).toHaveLength(1)
+    expect(state.importResult.value?.success).toBe(3)
+    expect(state.importProgress.value).toBe(100)
+  })
+
+  it.each([101, 2.9, Number.MAX_SAFE_INTEGER, Number.MAX_VALUE])(
+    'caps an oversized batchSize option of %s at the server import request limit',
+    async (batchSize) => {
+      const links = Array.from({ length: 250 }, (_, index) => link(index))
+      const requestImport = vi.fn(async (data: ImportData) => result({ success: data.links.length }))
+      const state = useLinkImport({ batchSize, delay: async () => undefined, requestImport })
+      await state.handleFile(jsonFile({ version: '1.0', links }))
+
+      await state.importLinks()
+
+      expect(requestImport.mock.calls.length).toBeGreaterThan(0)
+      for (const [data] of requestImport.mock.calls)
+        expect(data.links.length).toBeLessThanOrEqual(MAX_IMPORT_BATCH_SIZE)
+      expect(state.importResult.value?.success).toBe(links.length)
+      expect(state.importProgress.value).toBe(100)
+      expect(Number.isFinite(state.importProgress.value)).toBe(true)
+    },
+  )
 
   it('merges batch results with global indexes and completes after a failed batch', async () => {
     let state: ReturnType<typeof createImport>
@@ -220,19 +256,19 @@ describe('useLinkImport', () => {
       exportedAt: '2026-01-02T03:04:05.000Z',
       count: 1,
       links: [{ ...sourceLinks[1] }],
-    }, 'sink-import-success-2026-01-02T03-04-05-000Z.json')
+    }, 'slite-import-success-2026-01-02T03-04-05-000Z.json')
     expect(mocks.saveAsJson).toHaveBeenNthCalledWith(2, {
       version: '1.0',
       exportedAt: '2026-01-02T03:04:05.000Z',
       count: 1,
       links: [{ ...sourceLinks[0] }],
-    }, 'sink-import-skipped-2026-01-02T03-04-05-000Z.json')
+    }, 'slite-import-skipped-2026-01-02T03-04-05-000Z.json')
     expect(mocks.saveAsJson).toHaveBeenNthCalledWith(3, {
       version: '1.0',
       exportedAt: '2026-01-02T03:04:05.000Z',
       count: 1,
       links: [{ ...sourceLinks[2], _importError: 'invalid link' }],
-    }, 'sink-import-failed-2026-01-02T03-04-05-000Z.json')
+    }, 'slite-import-failed-2026-01-02T03-04-05-000Z.json')
   })
 
   it('resets completed workflow state', async () => {

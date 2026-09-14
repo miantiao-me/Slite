@@ -1,13 +1,5 @@
 {
   "links": {
-    "migration_gate": {
-      "loading": "正在准备链接数据",
-      "scanned": "已扫描 {count} 条链接",
-      "failed_title": "链接迁移失败",
-      "failed_description": "KV 到 D1 迁移完成前，链接暂不可用。",
-      "retry": "重试",
-      "open_migration": "前往迁移工具"
-    },
     "create": "创建链接",
     "edit": "编辑链接",
     "delete_success": "删除成功！",

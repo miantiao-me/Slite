@@ -1,3 +1,4 @@
+import type { H3Event } from 'h3'
 import type { Compilable } from 'kysely'
 import {
   DummyDriver,
@@ -6,9 +7,9 @@ import {
   MysqlIntrospector,
   MysqlQueryCompiler,
 } from 'kysely'
+import { AnalyticsUnavailableError, queryAnalytics } from '../database/analytics'
 
 export interface AnalyticsRow {
-  _sample_interval: number
   index1: string
   timestamp: string
   [column: string]: unknown
@@ -16,7 +17,7 @@ export interface AnalyticsRow {
 
 type AnalyticsDatabase = Record<string, AnalyticsRow>
 
-// Keep Analytics Engine identifiers to its conservative bare-identifier subset.
+// Identifiers are application-owned; user values must use bound parameters.
 // eslint-disable-next-line regexp/prefer-w, regexp/use-ignore-case
 const identifierPattern = /^[A-Za-z_][A-Za-z0-9_]*$/
 
@@ -46,17 +47,32 @@ const coldDb = new Kysely<AnalyticsDatabase>({
   },
 })
 
-export function createAnalyticsQuery(dataset: string) {
-  if (!identifierPattern.test(dataset))
-    throw new Error(`Invalid Analytics dataset: ${dataset}`)
-
-  return coldDb.selectFrom(dataset)
+export function createAnalyticsQuery() {
+  return coldDb.selectFrom('access_events')
 }
 
-export function compileAnalyticsQuery(query: Compilable): string {
-  const compiled = query.compile()
-  if (compiled.parameters.length !== 0)
-    throw new Error('Analytics SQL queries must not contain parameters')
+export function compileAnalyticsQuery(query: Compilable) {
+  return query.compile()
+}
 
-  return compiled.sql
+export async function useAnalytics(_event: H3Event, query: Compilable) {
+  const compiled = compileAnalyticsQuery(query)
+  const parameters = compiled.parameters.map((value) => {
+    if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint')
+      return value
+    throw new TypeError('Unsupported analytics parameter')
+  })
+  try {
+    return { data: await queryAnalytics(compiled.sql, parameters) }
+  }
+  catch (error) {
+    if (error instanceof AnalyticsUnavailableError) {
+      throw createError({
+        status: 503,
+        statusText: 'Analytics unavailable',
+        message: 'Analytics unavailable',
+      })
+    }
+    throw error
+  }
 }

@@ -2,7 +2,7 @@
 import { ArrowUpCircle, Coffee, Languages, Laptop, Moon, Sun } from '@lucide/vue'
 import { useSidebar } from '@/components/ui/sidebar'
 
-const { coffee } = useAppConfig()
+const { coffee, github } = useAppConfig()
 const colorMode = useColorMode()
 const { t, setLocale, locales } = useI18n()
 const { isMobile, state } = useSidebar()
@@ -45,7 +45,7 @@ const releaseLabel = computed(() => t('sidebar.update', {
             class="relative w-9 justify-center px-0"
           >
             <a
-              href="https://github.com/ccbikai/Sink/releases"
+              :href="`${github}/releases`"
               target="_blank"
               rel="noopener noreferrer"
               :aria-label="releaseLabel"

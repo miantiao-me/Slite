@@ -1,37 +1,8 @@
 {
   "migrate": {
-    "d1": {
-      "title": "Migrasi KV ke D1",
-      "description": "Salin data tautan dari Workers KV ke D1 tanpa mengganti data D1 yang ada.",
-      "status_title": "Status migrasi",
-      "status_pending": "Migrasi belum selesai.",
-      "status_completed": "Migrasi selesai.",
-      "completed_at": "Selesai {date}",
-      "run_again": "Jalankan lagi",
-      "running": "Memigrasikan…",
-      "success": "Migrasi berhasil diselesaikan.",
-      "failed": "Migrasi gagal",
-      "scanned": "Dipindai",
-      "inserted": "Ditambahkan",
-      "skipped": "Dilewati",
-      "expired": "Kedaluwarsa",
-      "failed_count": "Gagal",
-      "no_marker": "Penanda penyelesaian tidak ditemukan."
-    },
-    "access_export": {
-      "title": "Ekspor Data Akses",
-      "description": "Unduh statistik akses sebagai file CSV",
-      "date_range": "Rentang Tanggal",
-      "slug_label": "Filter Slug",
-      "slug_description": "Kosongkan untuk mengekspor semua slug.",
-      "button": "Ekspor CSV",
-      "exporting": "Mengekspor...",
-      "success": "Ekspor berhasil",
-      "failed": "Ekspor gagal"
-    },
     "backup": {
       "title": "Cadangan Manual",
-      "description": "Picu pencadangan manual semua tautan ke bucket R2 yang dikonfigurasi",
+      "description": "Buat cadangan manual semua tautan di penyimpanan lokal",
       "button": "Mulai Pencadangan",
       "backing_up": "Mencadangkan...",
       "success": "Pencadangan berhasil",
@@ -65,10 +36,21 @@
       },
       "errors": {
         "invalid_json": "File JSON tidak valid",
-        "invalid_format": "Format file tidak valid. Gunakan file yang diekspor dari Sink.",
+        "invalid_format": "Format file tidak valid. Gunakan file yang diekspor dari Slite.",
         "parse_error": "Gagal mengurai file",
         "batch_failed": "Batch impor ini gagal."
       }
+    },
+    "access_export": {
+      "title": "Ekspor Analitik",
+      "description": "Unduh analitik tautan sebagai file CSV",
+      "date_range": "Rentang Tanggal",
+      "slug_label": "Filter Slug",
+      "slug_description": "Kosongkan untuk mengekspor semua slug.",
+      "button": "Ekspor CSV",
+      "exporting": "Mengekspor...",
+      "success": "Ekspor berhasil",
+      "failed": "Ekspor gagal"
     }
   }
 }

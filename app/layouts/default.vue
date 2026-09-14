@@ -63,7 +63,7 @@ function closeMobileMenu() {
             >
               <span class="flex size-8 items-center justify-center rounded-full">
                 <img
-                  src="/sink.png"
+                  src="/slite.png"
                   :alt="`${title} Logo`"
                   width="32"
                   height="32"
@@ -262,7 +262,7 @@ function closeMobileMenu() {
                 class="flex size-8 items-center justify-center rounded-full"
               >
                 <img
-                  src="/sink.png"
+                  src="/slite.png"
                   :alt="`${title} Logo`"
                   width="32"
                   height="32"

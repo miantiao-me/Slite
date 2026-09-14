@@ -17,11 +17,11 @@
     "links": {
       "documentation": "Dokumentation",
       "api_reference": "API-Referenz",
-      "documentation_aria_label": "Sink-Dokumentation öffnen (wird in einem neuen Tab geöffnet)",
+      "documentation_aria_label": "Slite-Dokumentation öffnen (wird in einem neuen Tab geöffnet)",
       "resources_aria_label": "Ressourcen",
       "skip_to_content": "Zum Hauptinhalt springen",
       "home_aria_label": "Startseite",
-      "github_aria_label": "Sink auf GitHub"
+      "github_aria_label": "Slite auf GitHub"
     }
   },
   "nav": {

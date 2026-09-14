@@ -1,0 +1,31 @@
+services:
+  slite:
+    # Pull the released image by default; `docker compose up --build` builds it
+    # from the local Dockerfile and tags it with the same reference.
+    image: ghcr.io/miantiao-me/slite:latest
+    build: .
+    restart: unless-stopped
+    init: true
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - '5483:5483'
+    environment:
+      # Optional at startup. Without it the process generates a random token
+      # that is never logged or persisted, so public redirects keep working
+      # while dashboard and API access stays unavailable.
+      NUXT_SITE_TOKEN: ${NUXT_SITE_TOKEN:-}
+      NUXT_DATA_DIR: /data
+      NUXT_TRUST_PROXY: ${NUXT_TRUST_PROXY:-false}
+      NUXT_DISABLE_AUTO_BACKUP: ${NUXT_DISABLE_AUTO_BACKUP:-false}
+      NUXT_AI_API_KEY: ${NUXT_AI_API_KEY:-}
+      NUXT_AI_BASE_URL: ${NUXT_AI_BASE_URL:-}
+      NUXT_AI_MODEL: ${NUXT_AI_MODEL:-}
+      # Empty keeps the built-in database; see docs/deployment/docker.md.
+      NUXT_GEOIP_PATH: ${NUXT_GEOIP_PATH:-}
+    volumes:
+      - slite-data:/data
+    stop_grace_period: 30s
+volumes:
+  slite-data:

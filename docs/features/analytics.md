@@ -1,48 +1,13 @@
----
-title: Analytics and Realtime
-description: Turn on visit analytics, read charts and logs, understand near-realtime view, exclude bots, and export CSV.
----
-
 # Analytics and Realtime
 
-Analytics is **optional**. Without it, short links, login, and link management still work — charts, logs, and realtime stay empty.
+Slite stores analytics locally in `/data/analytics.duckdb`. The dashboard queries this data for click trends, referrers, devices, browsers, and other recorded dimensions. Preserve the file as part of a [complete stopped-instance backup](/features/backups).
 
-## Turn it on (three things)
+Each access event persists the full client IP address, the full User-Agent string, the referer host, the preferred language from `Accept-Language`, the parsed operating system, browser, and device, and the resolved country, region, city, and coordinates. Because IP addresses are stored in full, treat `/data/analytics.duckdb` as personal data. Slite currently has no automatic analytics retention, so events remain until the file is removed or replaced; operators should define and document the retention and user-notice policies that apply to their deployment.
 
-You need all three:
+Dashboard APIs aggregate this data. `GET /api/logs/events` returns recent events without the stored IP, and the remaining event fields stay available to authenticated dashboard requests.
 
-1. **Analytics Engine binding** named `ANALYTICS`
-   - **Workers:** usually created by deploy settings (dataset default `sink`)
-   - **Pages:** **Settings → Bindings → Add → Analytics Engine**
-   - Variable name: `ANALYTICS`
-   - Dataset: `sink` by default. If you set `NUXT_DATASET`, use the same name here
+Geographic fields come from the resolved GeoIP database: release Docker images bundle DB-IP City Lite, which provides country, region, city, and coordinates but no time-zone or postcode data. An instance without a readable database fails open, so empty maps or country breakdowns do not imply that redirects failed. `NUXT_TRUST_PROXY` only controls which client IP is trusted; it does not provide geographic metadata. See [GeoIP database](/deployment/docker#geoip-database) for the resolution order.
 
-2. **Account ID** — set `NUXT_CF_ACCOUNT_ID` to the Cloudflare account that hosts this app  
-   (Dashboard sidebar → account name, or the URL after you log in)
+The realtime dashboard polls approximately every 10 seconds and replays queued events at roughly one per second. Pausing stops polling, replay, and WebGL motion. It is a pseudo-live view, not an SSE or WebSocket connection.
 
-3. **API token** — set `NUXT_CF_API_TOKEN` as an encrypted secret:
-   - Cloudflare dashboard → profile icon → **My Profile** → **API Tokens** → **Create Token** → **Custom Token**
-   - Permission: **Account → Account Analytics → Read** only
-   - Prefer limiting the token to that same account
-
-If any one is missing or mismatched, analytics stays empty.
-
-## What you can see
-
-Successful visits feed counters, charts, heatmaps, recent events, and locations. Filter by link, time, country, browser, OS, device, and referrer.
-
-Numbers can be **approximate** (Cloudflare samples high traffic). Low traffic can look uneven for the same reason.
-
-To hide detected bots from stats and [click webhooks](/configuration/webhooks), set `NUXT_DISABLE_BOT_ACCESS_LOG=true`.
-
-## Near-realtime page
-
-::: tip Not a live stream
-This page does **not** use WebSocket. It refreshes about every 10 seconds and plays new events at about one per second. Pause or a hidden tab stops playback. Treat it as a live-looking overview, not a perfect event feed.
-:::
-
-## Export
-
-Download filtered stats as CSV from the dashboard or the stats export API (slug, URL, viewers, views, referrers).
-
-Link JSON export is separate — see [Import and Export](./import-export).
+Use a single process and local storage. Analytics files are not intended for concurrent access by multiple Slite replicas.

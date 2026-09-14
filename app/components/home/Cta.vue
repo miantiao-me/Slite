@@ -34,7 +34,7 @@ const { documentation } = useAppConfig()
               size="lg"
             >
               <a
-                :href="`${documentation}/guide/getting-started`"
+                :href="documentation"
                 target="_blank"
                 rel="noopener noreferrer"
                 :title="$t('home.cta.button')"

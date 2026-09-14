@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { useFetch } from '#imports'
 
 export function useVersionCheck() {
-  const { data, status } = useFetch<{ version: string }>('https://cdn.jsdelivr.net/gh/miantiao-me/Sink@master/package.json', {
-    key: 'latest-sink-version',
+  const { data, status } = useFetch<{ version: string }>('https://raw.githubusercontent.com/miantiao-me/Slite/Slite/package.json', {
+    key: 'latest-slite-version',
     server: false,
     lazy: true,
     dedupe: 'defer',

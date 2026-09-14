@@ -15,8 +15,8 @@
         "description": "링크 분석을 모니터링하고 유용한 통계를 수집하세요"
       },
       "serverless": {
-        "title": "서버리스",
-        "description": "기존 서버 없이 배포하세요"
+        "title": "셀프 호스팅",
+        "description": "Docker로 자신의 서버에서 Slite를 실행하세요"
       },
       "customizable_slug": {
         "title": "사용자 지정 슬러그",
@@ -24,7 +24,7 @@
       },
       "ai_slug": {
         "title": "AI 지원",
-        "description": "페이지 콘텐츠로부터 슬러그와 OpenGraph 메타데이터를 생성하세요"
+        "description": "URL로 슬러그와 OpenGraph 메타데이터를 생성하세요"
       },
       "link_expiration": {
         "title": "링크 제어",
@@ -32,7 +32,7 @@
       },
       "device_routing": {
         "title": "스마트 라우팅",
-        "description": "기기 또는 국가별로 방문자를 리디렉션하세요"
+        "description": "Apple과 Android 방문자를 다른 대상으로 리디렉션하세요"
       },
       "og_preview": {
         "title": "소셜 미리보기",
@@ -48,7 +48,7 @@
       },
       "import_export": {
         "title": "가져오기/내보내기",
-        "description": "JSON으로 링크를 일괄 전송하고 액세스 분석을 CSV로 내보내세요"
+        "description": "JSON으로 링크를 일괄 전송하고 분석 데이터를 CSV로 내보내세요"
       },
       "multi_language": {
         "title": "다국어",
@@ -56,25 +56,25 @@
       }
     },
     "cta": {
-      "title": "Sink 배포하기",
-      "description": "시작 가이드에 따라 Cloudflare에 Sink를 구성하고 배포하세요",
-      "button": "배포 가이드 보기"
+      "title": "Slite 직접 실행하기",
+      "description": "Docker를 사용해 자신의 서버에서 Slite를 실행하세요",
+      "button": "설정 안내 보기"
     },
     "logos": {
-      "title": "훌륭한 기술로 제작되었습니다"
+      "title": "자신의 서버에서 실행"
     },
     "twitter": {
       "follow": "X(트위터)에서 팔로우하기"
     },
     "stats": {
-      "title": "숫자로 보는 Sink",
-      "subtitle": "전 세계 개발자들이 신뢰합니다",
+      "title": "숫자로 보는 Slite",
+      "subtitle": "GitHub에서 오픈 소스",
       "stars": "GitHub 스타",
       "forks": "포크"
     },
     "testimonials": {
       "title": "사용자들의 사랑을 받고 있습니다",
-      "subtitle": "개발자들이 Sink에 대해 말하는 것을 확인하세요"
+      "subtitle": "개발자들이 Slite에 대해 말하는 것을 확인하세요"
     }
   }
 }

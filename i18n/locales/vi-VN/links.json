@@ -1,13 +1,5 @@
 {
   "links": {
-    "migration_gate": {
-      "loading": "Đang chuẩn bị liên kết",
-      "scanned": "Đã quét {count} liên kết",
-      "failed_title": "Di chuyển liên kết thất bại",
-      "failed_description": "Liên kết không khả dụng cho đến khi di chuyển từ KV sang D1 hoàn tất.",
-      "retry": "Thử lại",
-      "open_migration": "Mở công cụ di chuyển"
-    },
     "create": "Tạo liên kết",
     "edit": "Chỉnh sửa liên kết",
     "delete_success": "Xóa thành công!",

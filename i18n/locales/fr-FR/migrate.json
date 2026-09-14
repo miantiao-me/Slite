@@ -1,37 +1,8 @@
 {
   "migrate": {
-    "d1": {
-      "title": "Migration de KV vers D1",
-      "description": "Copiez les liens de Workers KV vers D1 sans remplacer les enregistrements existants.",
-      "status_title": "État de la migration",
-      "status_pending": "La migration n’est pas terminée.",
-      "status_completed": "Migration terminée.",
-      "completed_at": "Terminée le {date}",
-      "run_again": "Relancer",
-      "running": "Migration…",
-      "success": "Migration terminée avec succès.",
-      "failed": "Échec de la migration",
-      "scanned": "Analysés",
-      "inserted": "Insérés",
-      "skipped": "Ignorés",
-      "expired": "Expirés",
-      "failed_count": "Échecs",
-      "no_marker": "Aucun marqueur de fin trouvé."
-    },
-    "access_export": {
-      "title": "Exporter les données d’accès",
-      "description": "Télécharger les statistiques d’accès au format CSV",
-      "date_range": "Période",
-      "slug_label": "Filtrer par slug",
-      "slug_description": "Laissez ce champ vide pour exporter tous les slugs.",
-      "button": "Exporter en CSV",
-      "exporting": "Exportation…",
-      "success": "Export réussi",
-      "failed": "Échec de l’export"
-    },
     "backup": {
       "title": "Sauvegarde manuelle",
-      "description": "Déclenchez une sauvegarde manuelle de tous les liens vers le bucket R2 configuré",
+      "description": "Déclenchez une sauvegarde manuelle de tous les liens dans le stockage local",
       "button": "Démarrer la sauvegarde",
       "backing_up": "Sauvegarde en cours...",
       "success": "Sauvegarde réussie",
@@ -65,10 +36,21 @@
       },
       "errors": {
         "invalid_json": "Fichier JSON invalide",
-        "invalid_format": "Format de fichier invalide. Veuillez utiliser un fichier exporté depuis Sink.",
+        "invalid_format": "Format de fichier invalide. Veuillez utiliser un fichier exporté depuis Slite.",
         "parse_error": "Échec de l'analyse du fichier",
         "batch_failed": "Ce lot d’importation a échoué."
       }
+    },
+    "access_export": {
+      "title": "Exporter les analyses",
+      "description": "Téléchargez les analyses de liens au format CSV",
+      "date_range": "Période",
+      "slug_label": "Filtrer par slug",
+      "slug_description": "Laissez ce champ vide pour exporter tous les slugs.",
+      "button": "Exporter en CSV",
+      "exporting": "Exportation…",
+      "success": "Export réussi",
+      "failed": "Échec de l’export"
     }
   }
 }

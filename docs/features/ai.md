@@ -1,27 +1,15 @@
----
-title: Workers AI
-description: Optional AI help for short-code suggestions and social preview text.
----
+# Optional AI
 
-# Workers AI
-
-Sink can use Cloudflare **Workers AI** to suggest short codes and social preview titles/descriptions. Optional — normal links work without it.
+Slite can use an OpenAI-compatible provider through xsai for AI-assisted short-link and social-preview suggestions. Ordinary link management does not require it.
 
 ## Enable
 
-Bind Workers AI as `AI`. You can change the model or prompts in [configuration](/configuration/#advanced-defaults). A custom short-code prompt must keep the `{slugRegex}` placeholder.
+`NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are empty by default. Until both are explicitly set to an OpenAI-compatible endpoint and model, the AI routes return `501` and make no outbound request. Restart the process after changing them.
 
-If AI is not bound, AI endpoints return **501** (“not enabled”).
+The base URL must include the provider's API prefix where required, and the model must support the operation you request. `NUXT_AI_API_KEY` may stay empty when the provider does not require a key.
 
-## Behavior
+The routes are `/api/link/ai` for slug suggestions and `/api/link/og-ai` for title and description; the latter accepts an optional `locale` query parameter. Once configured, a failing provider call falls back to URL-derived values instead of failing the request.
 
-For a URL, Sink tries to read the page and ask the model for structured output:
+## Data sharing
 
-- `/api/link/ai` — short-code suggestion
-- `/api/link/og-ai` — title and description; optional `locale` query for preferred language
-
-If the model fails after the request starts, Sink falls back to a simple URL-based suggestion. Always review before saving.
-
-::: warning Data is sent to Workers AI
-Page content and the destination URL may be sent to Cloudflare Workers AI. Check sensitivity and policy first.
-:::
+AI requests send only the destination URL you provide to the configured provider; Slite does not fetch page content. Review the provider's retention policy and pricing before enabling AI, and never submit secrets. Check the endpoint, model availability, credentials, and outbound network access when generation fails.

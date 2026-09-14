@@ -1,37 +1,8 @@
 {
   "migrate": {
-    "d1": {
-      "title": "KV 到 D1 遷移",
-      "description": "將連結記錄從 Workers KV 複製到 D1，並保留 D1 中已有的記錄。",
-      "status_title": "遷移狀態",
-      "status_pending": "遷移尚未完成。",
-      "status_completed": "遷移已完成。",
-      "completed_at": "完成於 {date}",
-      "run_again": "再次遷移",
-      "running": "遷移中…",
-      "success": "遷移已成功完成。",
-      "failed": "遷移失敗",
-      "scanned": "已掃描",
-      "inserted": "已寫入",
-      "skipped": "已略過",
-      "expired": "已過期",
-      "failed_count": "失敗",
-      "no_marker": "找不到遷移完成標記。"
-    },
-    "access_export": {
-      "title": "匯出存取資料",
-      "description": "將存取統計資料下載為 CSV 檔案",
-      "date_range": "日期範圍",
-      "slug_label": "Slug 篩選",
-      "slug_description": "留空將匯出全部 Slug。",
-      "button": "匯出 CSV",
-      "exporting": "正在匯出...",
-      "success": "匯出成功",
-      "failed": "匯出失敗"
-    },
     "backup": {
       "title": "手動備份",
-      "description": "手動觸發所有連結到已配置 R2 儲存桶的備份",
+      "description": "在本機儲存空間中手動備份所有連結",
       "button": "開始備份",
       "backing_up": "備份中...",
       "success": "備份成功",
@@ -65,10 +36,21 @@
       },
       "errors": {
         "invalid_json": "無效的 JSON 檔案",
-        "invalid_format": "檔案格式無效，請使用從 Sink 匯出的檔案",
+        "invalid_format": "檔案格式無效，請使用從 Slite 匯出的檔案",
         "parse_error": "檔案解析失敗",
         "batch_failed": "此批連結匯入失敗。"
       }
+    },
+    "access_export": {
+      "title": "匯出分析資料",
+      "description": "將連結分析資料下載為 CSV 檔案",
+      "date_range": "日期範圍",
+      "slug_label": "Slug 篩選",
+      "slug_description": "留空將匯出全部 Slug。",
+      "button": "匯出 CSV",
+      "exporting": "正在匯出...",
+      "success": "匯出成功",
+      "failed": "匯出失敗"
     }
   }
 }

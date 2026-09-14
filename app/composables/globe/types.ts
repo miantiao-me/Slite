@@ -37,14 +37,6 @@ export interface WebGLGlobeContext {
   paused: Ref<boolean>
 }
 
-export interface ArcData {
-  startLat: number
-  startLng: number
-  endLat: number
-  endLng: number
-  color?: string
-}
-
 export interface RippleData {
   lat: number
   lng: number

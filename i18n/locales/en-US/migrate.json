@@ -1,37 +1,8 @@
 {
   "migrate": {
-    "d1": {
-      "title": "KV to D1 Migration",
-      "description": "Copy link records from Workers KV to D1. Existing D1 records are preserved.",
-      "status_title": "Migration status",
-      "status_pending": "Migration has not completed.",
-      "status_completed": "Migration completed.",
-      "completed_at": "Completed {date}",
-      "run_again": "Run again",
-      "running": "Migrating…",
-      "success": "Migration completed successfully.",
-      "failed": "Migration failed",
-      "scanned": "Scanned",
-      "inserted": "Inserted",
-      "skipped": "Skipped",
-      "expired": "Expired",
-      "failed_count": "Failed",
-      "no_marker": "No completion marker found."
-    },
-    "access_export": {
-      "title": "Export Access Data",
-      "description": "Download access statistics as a CSV file",
-      "date_range": "Date Range",
-      "slug_label": "Slug Filter",
-      "slug_description": "Leave empty to export all slugs.",
-      "button": "Export CSV",
-      "exporting": "Exporting…",
-      "success": "Export successful",
-      "failed": "Export failed"
-    },
     "backup": {
       "title": "Manual Backup",
-      "description": "Trigger a manual backup of all links to the configured R2 bucket",
+      "description": "Create a manual backup of all links in local storage",
       "button": "Start Backup",
       "backing_up": "Backing up…",
       "success": "Backup successful",
@@ -65,10 +36,21 @@
       },
       "errors": {
         "invalid_json": "Invalid JSON file",
-        "invalid_format": "Invalid file format. Please use a file exported from Sink.",
+        "invalid_format": "Invalid file format. Please use a file exported from Slite.",
         "parse_error": "Failed to parse file",
         "batch_failed": "This import batch failed."
       }
+    },
+    "access_export": {
+      "title": "Export Analytics",
+      "description": "Download link analytics as a CSV file",
+      "date_range": "Date Range",
+      "slug_label": "Slug Filter",
+      "slug_description": "Leave empty to export all slugs.",
+      "button": "Export CSV",
+      "exporting": "Exporting…",
+      "success": "Export successful",
+      "failed": "Export failed"
     }
   }
 }

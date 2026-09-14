@@ -1,12 +1,9 @@
-import { env } from 'cloudflare:workers'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { deleteStoredLinks, expectMaskedPassword, expectStoredHashedPassword, fetch, fetchWithAuth, getStoredLink, postJson, putJson, setLinkStoreD1Mode } from '../utils'
+import { afterEach, describe, expect, it } from 'vitest'
+import { deleteStoredLinks, expectMaskedPassword, expectStoredHashedPassword, fetch, fetchWithAuth, getStoredLink, postJson, putJson, useTestServer } from '../utils'
 
 const createdSlugs = new Set<string>()
 
-beforeEach(async () => {
-  await setLinkStoreD1Mode()
-})
+useTestServer()
 
 function trackSlug(slug: string) {
   createdSlugs.add(slug)
@@ -26,25 +23,6 @@ afterEach(async () => {
 })
 
 describe('/api/link/ai', () => {
-  it('returns a fallback slug when Workers AI fails', async () => {
-    const runSpy = vi.spyOn(env.AI, 'run').mockRejectedValue(new Error('Workers AI unavailable'))
-    const toMarkdownSpy = vi.spyOn(env.AI, 'toMarkdown').mockRejectedValue(new Error('Markdown conversion unavailable'))
-
-    try {
-      const response = await fetchWithAuth(`/api/link/ai?url=${encodeURIComponent('https://example.com/fallback-slug')}`)
-      expect(response.status).toBe(200)
-
-      const data = await response.json() as { slug: string }
-      expect(data.slug).toBe('fallback-slug')
-      expect(data.slug).not.toBe('')
-      expect(runSpy).toHaveBeenCalledOnce()
-    }
-    finally {
-      runSpy.mockRestore()
-      toMarkdownSpy.mockRestore()
-    }
-  })
-
   it('returns 400 when url parameter is missing', async () => {
     const response = await fetchWithAuth('/api/link/ai')
     expect(response.status).toBe(400)
@@ -57,25 +35,6 @@ describe('/api/link/ai', () => {
 })
 
 describe('/api/link/og-ai', () => {
-  it('returns fallback metadata when Workers AI fails', async () => {
-    const runSpy = vi.spyOn(env.AI, 'run').mockRejectedValue(new Error('Workers AI unavailable'))
-    const toMarkdownSpy = vi.spyOn(env.AI, 'toMarkdown').mockRejectedValue(new Error('Markdown conversion unavailable'))
-
-    try {
-      const response = await fetchWithAuth(`/api/link/og-ai?url=${encodeURIComponent('https://example.com/fallback-metadata')}`)
-      expect(response.status).toBe(200)
-
-      const data = await response.json() as { title: string, description: string }
-      expect(data.title).toBe('example.com')
-      expect(data.description).not.toBe('')
-      expect(runSpy).toHaveBeenCalledOnce()
-    }
-    finally {
-      runSpy.mockRestore()
-      toMarkdownSpy.mockRestore()
-    }
-  })
-
   it('returns 400 when url parameter is missing', async () => {
     const response = await fetchWithAuth('/api/link/og-ai')
     expect(response.status).toBe(400)
@@ -462,7 +421,7 @@ describe('/api/link/edit unsafe', { concurrent: false }, () => {
     expect(setData.link.unsafe).toBe(true)
 
     const deleteResponse = await postJson('/api/link/delete', { slug: unsafePayload.slug })
-    expect(deleteResponse.status).toBe(204)
+    expect(deleteResponse.status).toBe(200)
   })
 })
 
@@ -472,7 +431,8 @@ describe('/api/link/delete', { concurrent: false }, () => {
     expect((await postJson('/api/link/create', payload)).status).toBe(201)
 
     const response = await postJson('/api/link/delete', { slug: payload.slug })
-    expect(response.status).toBe(204)
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe('')
   })
 
   it('returns 400 when slug is missing', async () => {

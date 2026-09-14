@@ -1,4 +1,4 @@
-import type { AreaData, ColoData, CurrentLocation, GeoJSONData, LocationData } from '@/types'
+import type { AreaData, CurrentLocation, GeoJSONData, LocationData } from '@/types'
 import { computed, inject, ref, shallowRef, watch } from 'vue'
 import { useAPI } from '@/utils/api'
 import { REALTIME_PAUSED_KEY } from '@/utils/injection-keys'
@@ -16,7 +16,6 @@ export function useGlobeData() {
 
   const countries = shallowRef<GeoJSONData>({ features: [] })
   const locations = shallowRef<LocationData[]>([])
-  const colos = shallowRef<Record<string, ColoData>>({})
   const currentLocation = ref<CurrentLocation>({})
   const countryStats = shallowRef<Map<string, number>>(new Map())
   const error = shallowRef(false)
@@ -52,10 +51,6 @@ export function useGlobeData() {
 
   async function getGlobeJSON(signal: AbortSignal) {
     return await $fetch<GeoJSONData>('/countries.geojson', { signal })
-  }
-
-  async function getColosJSON(signal: AbortSignal) {
-    return await $fetch<Record<string, ColoData>>('/colos.json', { signal })
   }
 
   async function getCurrentLocation(signal: AbortSignal) {
@@ -127,9 +122,8 @@ export function useGlobeData() {
     const realtimeSnapshot = isPaused.value
       ? Promise.resolve<[LocationData[], Map<string, number>]>([locations.value, countryStats.value])
       : getRealtimeSnapshot(requestSignal)
-    const [nextCountries, nextColos, nextLocation, [nextLocations, nextStats]] = await Promise.all([
+    const [nextCountries, nextLocation, [nextLocations, nextStats]] = await Promise.all([
       getGlobeJSON(requestSignal),
-      getColosJSON(requestSignal),
       optionalLocation,
       realtimeSnapshot,
     ])
@@ -138,7 +132,6 @@ export function useGlobeData() {
       return
 
     countries.value = nextCountries
-    colos.value = nextColos
     currentLocation.value = nextLocation
     if (!isRealtimeStale(snapshotVersion, requestSignal)) {
       locations.value = nextLocations
@@ -194,7 +187,6 @@ export function useGlobeData() {
   return {
     countries,
     locations,
-    colos,
     currentLocation,
     countryStats,
     error,

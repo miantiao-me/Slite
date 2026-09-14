@@ -3,6 +3,7 @@ import { ofetch } from 'ofetch'
 
 export async function isSafeUrl(event: H3Event, url: string): Promise<boolean> {
   const { safeBrowsingDoh } = useRuntimeConfig(event)
+  // No endpoint configured: the check is disabled and the URL is treated as safe.
   if (!safeBrowsingDoh)
     return true
 
@@ -14,13 +15,9 @@ export async function isSafeUrl(event: H3Event, url: string): Promise<boolean> {
 
     const dnsResult = await ofetch<{ Answer?: Array<{ data: string }> }>(dohUrl.toString(), {
       headers: { accept: 'application/dns-json' },
-      timeout: 5000,
+      signal: AbortSignal.timeout(5000),
       responseType: 'json',
-      cf: {
-        cacheEverything: true,
-        cacheTtlByStatus: { '200-299': 3600 },
-      },
-    } as RequestInit)
+    })
     if (dnsResult && Array.isArray(dnsResult.Answer)) {
       const isBlocked = dnsResult.Answer.some(answer => answer.data === '0.0.0.0')
       return !isBlocked

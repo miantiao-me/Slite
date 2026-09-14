@@ -154,9 +154,17 @@ export function createWebhookDelivery(options: CreateWebhookDeliveryOptions): Pr
   })
 }
 
-export function scheduleWebhookDelivery(context: Pick<ExecutionContext, 'waitUntil'>, delivery: Promise<void> | undefined): void {
-  if (delivery)
-    context.waitUntil(handleWebhookDelivery(delivery))
+const pendingDeliveries = new Set<Promise<void>>()
+
+export function scheduleWebhookDelivery(delivery: Promise<void> | undefined): void {
+  if (!delivery)
+    return
+  const pending = handleWebhookDelivery(delivery).finally(() => pendingDeliveries.delete(pending))
+  pendingDeliveries.add(pending)
+}
+
+export async function drainWebhookDeliveries(): Promise<void> {
+  await Promise.allSettled([...pendingDeliveries])
 }
 
 export function queueLinkClickedWebhook(event: H3Event, click: WebhookClickContext, link: Pick<Link, 'id' | 'slug'>): void {
@@ -167,5 +175,5 @@ export function queueLinkClickedWebhook(event: H3Event, click: WebhookClickConte
     click,
     link,
   })
-  scheduleWebhookDelivery(event.context.cloudflare.context, delivery)
+  scheduleWebhookDelivery(delivery)
 }

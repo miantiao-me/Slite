@@ -1,13 +1,5 @@
 {
   "links": {
-    "migration_gate": {
-      "loading": "Preparing your links",
-      "scanned": "{count} links scanned",
-      "failed_title": "Link migration failed",
-      "failed_description": "Your links are unavailable until the KV to D1 migration completes.",
-      "retry": "Try again",
-      "open_migration": "Open migration tools"
-    },
     "create": "Create Link",
     "edit": "Edit Link",
     "delete_success": "Link deleted",

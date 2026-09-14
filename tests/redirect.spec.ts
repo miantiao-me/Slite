@@ -1,13 +1,9 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { deleteStoredLinks, fetch, postJson, setLinkStoreD1Mode } from './utils'
-
-type CfRequestInit = RequestInit & { cf?: { country?: string } }
+import { afterAll, describe, expect, it } from 'vitest'
+import { deleteStoredLinks, fetch, postJson, server, useTestServer } from './utils'
 
 const createdSlugs: string[] = []
 
-beforeAll(async () => {
-  await setLinkStoreD1Mode()
-})
+useTestServer()
 
 afterAll(async () => {
   await deleteStoredLinks(createdSlugs)
@@ -57,6 +53,76 @@ describe('/', () => {
     expect(response.headers.get('Location')).toBe('https://example.com/landing?source=original&shared=request&campaign=summer')
   })
 
+  it('applies redirectWithQuery to a device destination', async () => {
+    const slug = `device-query-${crypto.randomUUID()}`
+    const apple = 'https://apps.apple.com/app#reviews'
+
+    const createResponse = await postJson('/api/link/create', {
+      url: 'https://example.com/default',
+      slug,
+      apple,
+      redirectWithQuery: true,
+    })
+    expect(createResponse.status).toBe(201)
+    createdSlugs.push(slug)
+
+    const response = await fetch(`/${slug}?campaign=summer&shared=request`, {
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/147 Version/11.1.1 Mobile/15E148 Safari/604.1',
+      },
+    })
+
+    expect(response.status).toBe(301)
+    expect(response.headers.get('Location')).toBe('https://apps.apple.com/app?campaign=summer&shared=request#reviews')
+  })
+
+  it('merges request query parameters into a device destination that already has a query and fragment', async () => {
+    const slug = `device-query-existing-${crypto.randomUUID()}`
+    const apple = 'https://apps.apple.com/app?source=original&shared=target#reviews'
+
+    const createResponse = await postJson('/api/link/create', {
+      url: 'https://example.com/default',
+      slug,
+      apple,
+      redirectWithQuery: true,
+    })
+    expect(createResponse.status).toBe(201)
+    createdSlugs.push(slug)
+
+    const response = await fetch(`/${slug}?campaign=summer&shared=request`, {
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+      },
+    })
+
+    expect(response.status).toBe(301)
+    expect(response.headers.get('Location')).toBe('https://apps.apple.com/app?source=original&shared=request&campaign=summer#reviews')
+  })
+
+  it('applies redirectWithQuery to a Google device destination', async () => {
+    const slug = `device-query-android-${crypto.randomUUID()}`
+    const google = 'https://play.google.com/store/apps/details?id=com.example&hl=en'
+
+    const createResponse = await postJson('/api/link/create', {
+      url: 'https://example.com/default',
+      slug,
+      google,
+      redirectWithQuery: true,
+    })
+    expect(createResponse.status).toBe(201)
+    createdSlugs.push(slug)
+
+    const response = await fetch(`/${slug}?utm_source=test`, {
+      redirect: 'manual',
+      headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36' },
+    })
+
+    expect(response.status).toBe(301)
+    expect(response.headers.get('Location')).toBe('https://play.google.com/store/apps/details?id=com.example&hl=en&utm_source=test')
+  })
+
   it('returns OG HTML to social bots while redirecting regular browsers', async () => {
     const slug = `social-og-${crypto.randomUUID()}`
     const targetUrl = 'https://example.com/social-target'
@@ -89,7 +155,7 @@ describe('/', () => {
     expect(browserResponse.headers.get('Location')).toBe(targetUrl)
   })
 
-  it('redirects to geo URL when cf.country matches', async () => {
+  it('ignores client-supplied country headers even when proxy trust is enabled', async () => {
     const slug = `geo-cn-${crypto.randomUUID()}`
     const cnUrl = 'https://cn.example.com/landing'
 
@@ -101,14 +167,21 @@ describe('/', () => {
     expect(createResponse.status).toBe(201)
     createdSlugs.push(slug)
 
-    const options: CfRequestInit = { redirect: 'manual', cf: { country: 'CN' } }
-    const response = await fetch(`/${slug}`, options as RequestInit)
+    await server.restart({ NUXT_TRUST_PROXY: 'true' })
+    try {
+      const response = await fetch(`/${slug}`, {
+        headers: { 'cf-ipcountry': 'CN', 'cf-region': 'California', 'cf-ipcity': 'San Francisco' },
+      })
 
-    expect(response.status).toBe(301)
-    expect(response.headers.get('Location')).toBe(cnUrl)
+      expect(response.status).toBe(301)
+      expect(response.headers.get('Location')).toBe('https://example.com/default')
+    }
+    finally {
+      await server.restart()
+    }
   })
 
-  it('redirects to default URL when cf.country does not match', async () => {
+  it('redirects to default URL without trusted country data', async () => {
     const slug = `geo-default-${crypto.randomUUID()}`
     const defaultUrl = 'https://example.com/default'
 
@@ -120,14 +193,13 @@ describe('/', () => {
     expect(createResponse.status).toBe(201)
     createdSlugs.push(slug)
 
-    const options: CfRequestInit = { redirect: 'manual', cf: { country: 'US' } }
-    const response = await fetch(`/${slug}`, options as RequestInit)
+    const response = await fetch(`/${slug}`)
 
     expect(response.status).toBe(301)
     expect(response.headers.get('Location')).toBe(defaultUrl)
   })
 
-  it('shows geo URL in unsafe warning', async () => {
+  it('shows the default URL in unsafe warning without trusted country data', async () => {
     const slug = `unsafe-geo-${crypto.randomUUID()}`
     const cnUrl = 'https://cn.example.com/unsafe'
 
@@ -140,12 +212,11 @@ describe('/', () => {
     expect(createResponse.status).toBe(201)
     createdSlugs.push(slug)
 
-    const options: CfRequestInit = { redirect: 'manual', cf: { country: 'CN' } }
-    const response = await fetch(`/${slug}`, options as RequestInit)
+    const response = await fetch(`/${slug}`)
     const html = await response.text()
 
     expect(response.status).toBe(200)
-    expect(html).toContain(cnUrl)
+    expect(html).toContain('https://example.com/default')
   })
 
   it('adds viewport meta to cloaked links for mobile browsers (fixes #301)', async () => {
@@ -171,7 +242,7 @@ describe('/', () => {
     expect(html).toContain('allow-modals')
   })
 
-  it('prefers device redirect over geo redirect', async () => {
+  it('prefers device redirect when geo rules are configured', async () => {
     const slug = `device-over-geo-${crypto.randomUUID()}`
     const apple = 'https://apps.apple.com/app/sink-test-priority'
 
@@ -184,9 +255,8 @@ describe('/', () => {
     expect(createResponse.status).toBe(201)
     createdSlugs.push(slug)
 
-    const options: CfRequestInit = {
+    const options: RequestInit = {
       redirect: 'manual',
-      cf: { country: 'CN' },
       headers: {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/147 Version/11.1.1 Mobile/15E148 Safari/604.1',
       },

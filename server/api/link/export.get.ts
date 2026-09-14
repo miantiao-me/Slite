@@ -19,8 +19,8 @@ defineRouteMeta({
 export default eventHandler(async (event) => {
   const query = getQuery(event)
   const cursor = query.cursor as string | undefined
-  const kvBatchLimit = useRuntimeConfig(event).public.kvBatchLimit as string
-  const limit = +kvBatchLimit
+  // Sink-compatible page size; the former NUXT_KV_BATCH_LIMIT config is not restored.
+  const limit = 50
 
   const list = await listLinks(event, { limit, cursor, status: 'all' })
   const links: Link[] = []

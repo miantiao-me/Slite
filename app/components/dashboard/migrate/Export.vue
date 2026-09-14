@@ -49,7 +49,7 @@ async function handleExport() {
       links: allLinks,
     }
 
-    saveAsJson(exportData, createExportFilename('sink-links', 'json'))
+    saveAsJson(exportData, createExportFilename('slite-links', 'json'))
 
     toast.success(t('migrate.export.success'))
   }

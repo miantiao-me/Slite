@@ -1,31 +1,13 @@
----
-layout: home
-title: Sink Documentation
-description: A Simple / Speedy / Secure Link Shortener with Analytics, 100% run on Cloudflare.
+# Slite
 
-hero:
-  name: Sink
-  text: Simple / Speedy / Secure
-  tagline: A Simple / Speedy / Secure Link Shortener with Analytics, 100% run on Cloudflare.
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /guide/getting-started
-    - theme: alt
-      text: Explore Features
-      link: /features/links
-    - theme: alt
-      text: API Reference
-      link: /api/
+A Simple, Self-Hosted Link Shortener with Analytics.
 
-features:
-  - title: Runs on Cloudflare
-    icon: ☁️
-    details: Deploy to Workers or Pages. You need a database (D1) and a fast cache (KV); analytics, file storage, and AI are optional.
-  - title: Link management
-    icon: 🔗
-    details: Add expiration, passwords, warnings, tags, and device or country routing when you need them.
-  - title: Visit analytics
-    icon: 📊
-    details: See reports, logs, filters, and a near-realtime view in the dashboard.
----
+Create and manage short links, inspect analytics, and keep your data on your own server. Slite uses a single Node.js process, authoritative SQLite storage, a process-local unstorage memory link cache, DuckDB analytics, and unstorage filesystem storage for images and backups. AI is optional.
+
+- [Get started](/guide/getting-started)
+- [Deploy with Docker or Compose](/deployment/docker)
+- [Configure your instance](/configuration/)
+- [Back up and restore](/features/backups)
+- [Source code](https://github.com/miantiao-me/Slite)
+
+Use Node.js 24 or newer and pnpm 11.11.0 for source builds. Keep one instance per local data directory.

@@ -1,4 +1,4 @@
-const TOKEN_KEY = 'SinkSiteToken'
+const TOKEN_KEY = 'SliteSiteToken'
 
 export function getAuthToken() {
   if (!import.meta.client)
