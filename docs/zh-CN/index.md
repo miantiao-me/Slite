@@ -5,7 +5,7 @@ description: 简洁的自托管短链接与访问分析应用。
 
 hero:
   name: Slite
-  text: 简洁 / 快速 / 安全
+  text: 简洁 / 自托管
   tagline: 简洁的自托管短链接与访问分析应用。
   actions:
     - theme: brand

@@ -5,7 +5,7 @@ description: A Simple, Self-Hosted Link Shortener with Analytics.
 
 hero:
   name: Slite
-  text: Simple / Speedy / Secure
+  text: Simple / Self-Hosted
   tagline: A Simple, Self-Hosted Link Shortener with Analytics.
   actions:
     - theme: brand
