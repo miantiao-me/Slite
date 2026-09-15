@@ -9,6 +9,7 @@
 | `NUXT_SITE_TOKEN`          | 可选；若设置须至少 8 位 | 仪表盘与 API 鉴权密钥；未设置时生成仅存活于当前进程的随机令牌，不落盘且不记录日志                                |
 | `NUXT_DATA_DIR`            | `/data`                 | 可写的本地持久化目录                                                                                             |
 | `NUXT_TRUST_PROXY`         | `false`                 | 仅在受控代理后端运行时才信任转发的客户端信息                                                                     |
+| `NUXT_CLIENT_IP_HEADER`    | 空                      | 可选的代理头，用于传递客户端 IP（如 `CF-Connecting-IP`）；设置后仅信任该头，且优先级高于 `X-Forwarded-For`        |
 | `NUXT_GEOIP_PATH`          | 空                      | 自定义 MMDB 文件路径；优先级高于 `/data/geoip.mmdb` 和镜像内置的 DB-IP City Lite 数据库                          |
 | `NUXT_DISABLE_AUTO_BACKUP` | `false`                 | 设为 `true` 停用每日自动链接备份；系统保留最近 30 份自动备份，手动备份不会被自动清理                             |
 

@@ -9,6 +9,7 @@ Set runtime environment variables on the Node.js process or through Compose. Use
 | `NUXT_SITE_TOKEN`          | Optional; at least 8 characters when set | Dashboard and API authentication; unset starts with a process-only random token that is never logged or persisted                                       |
 | `NUXT_DATA_DIR`            | `/data`                                  | Writable local persistent directory                                                                                                                     |
 | `NUXT_TRUST_PROXY`         | `false`                                  | Trust forwarded client information only behind a controlled proxy                                                                                       |
+| `NUXT_CLIENT_IP_HEADER`    | Empty                                    | Optional proxy-set header carrying the client IP (for example `CF-Connecting-IP`); setting it trusts that header only, ahead of `X-Forwarded-For`      |
 | `NUXT_GEOIP_PATH`          | Empty                                    | Optional MMDB file with priority over `/data/geoip.mmdb` and the DB-IP City Lite database bundled in the image                                          |
 | `NUXT_DISABLE_AUTO_BACKUP` | `false`                                  | Set to `true` to disable daily automatic link backups; the latest 30 automatic backups are retained, while manual backups are not automatically removed |
 

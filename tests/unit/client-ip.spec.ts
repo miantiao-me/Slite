@@ -38,3 +38,36 @@ describe('request client ip proxy trust', () => {
     expect(requestClientIp(event)).toBe('203.0.113.7')
   })
 })
+
+describe('request client ip custom header', () => {
+  it('prefers the configured header over x-forwarded-for', () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ trustProxy: false, clientIpHeader: 'cf-connecting-ip' }))
+    const event = createRequestEvent('127.0.0.1', {
+      'cf-connecting-ip': '198.51.100.9',
+      'x-forwarded-for': '203.0.113.7',
+    })
+
+    expect(requestClientIp(event)).toBe('198.51.100.9')
+  })
+
+  it('uses the first entry when the configured header carries a list', () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ trustProxy: false, clientIpHeader: 'x-real-ip' }))
+    const event = createRequestEvent('127.0.0.1', { 'x-real-ip': ' 198.51.100.9, 10.0.0.1 ' })
+
+    expect(requestClientIp(event)).toBe('198.51.100.9')
+  })
+
+  it('falls back to x-forwarded-for when the configured header is absent', () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ trustProxy: true, clientIpHeader: 'cf-connecting-ip' }))
+    const event = createRequestEvent('127.0.0.1', { 'x-forwarded-for': '198.51.100.9' })
+
+    expect(requestClientIp(event)).toBe('198.51.100.9')
+  })
+
+  it('keeps the socket address when neither header is trusted', () => {
+    vi.stubGlobal('useRuntimeConfig', () => ({ trustProxy: false, clientIpHeader: '' }))
+    const event = createRequestEvent('203.0.113.7', { 'x-forwarded-for': '198.51.100.9' })
+
+    expect(requestClientIp(event)).toBe('203.0.113.7')
+  })
+})

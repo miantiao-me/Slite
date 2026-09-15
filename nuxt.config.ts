@@ -41,6 +41,7 @@ export default defineNuxtConfig({
     dataDir: process.env.NODE_ENV === 'development' ? './data' : '/data',
     geoipPath: '',
     trustProxy: false,
+    clientIpHeader: '',
     redirectStatusCode: '301',
     redirectWithQuery: false,
     redirectNoStore: false,
