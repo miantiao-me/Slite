@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { AlertCircle, CheckCircle, Download, SkipForward, Upload, XCircle } from '@lucide/vue'
 
+const { previewMode } = useRuntimeConfig().public
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
 const {
   selectedFile,
@@ -50,8 +51,12 @@ function resetForm() {
           type="file"
           accept=".json"
           class="cursor-pointer"
+          :disabled="previewMode"
           @change="handleFileSelect"
         />
+        <p v-if="previewMode" class="mt-2 text-sm text-muted-foreground">
+          {{ $t('migrate.import.preview_mode_tip') }}
+        </p>
       </div>
 
       <Alert v-if="parseError" variant="destructive">

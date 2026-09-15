@@ -12,6 +12,8 @@
       "title": "Esporta Link",
       "description": "Scarica tutti i tuoi link come file JSON",
       "button": "Esporta Tutto",
+      "button_active": "Esporta Attivi",
+      "button_expired": "Esporta Scaduti",
       "total_links": "Link totali",
       "success": "Esportazione riuscita",
       "failed": "Esportazione fallita"
@@ -19,6 +21,7 @@
     "import": {
       "title": "Importa Link",
       "description": "Carica un file JSON per importare i link",
+      "preview_mode_tip": "La modalità anteprima non consente di importare link.",
       "dropzone": "Trascina qui il file JSON o clicca per caricare",
       "links_found": "{count} link pronti per l’importazione",
       "button": "Avvia Importazione",

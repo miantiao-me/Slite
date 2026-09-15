@@ -54,6 +54,14 @@ defineRouteMeta({
 })
 
 export default eventHandler(async (event) => {
+  const { previewMode } = useRuntimeConfig(event).public
+  if (previewMode) {
+    throw createError({
+      status: 403,
+      statusText: 'Preview mode cannot import links.',
+    })
+  }
+
   const importData = await readValidatedBody(event, ImportDataSchema.parse)
   const { importRequestLimit } = useRuntimeConfig(event)
   if (importData.links.length > importRequestLimit) {

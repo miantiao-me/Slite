@@ -12,6 +12,8 @@
       "title": "Links exportieren",
       "description": "Laden Sie alle Links als JSON-Datei herunter",
       "button": "Alle exportieren",
+      "button_active": "Aktive exportieren",
+      "button_expired": "Abgelaufene exportieren",
       "total_links": "Gesamtlinks",
       "success": "Export erfolgreich",
       "failed": "Export fehlgeschlagen"
@@ -19,6 +21,7 @@
     "import": {
       "title": "Links importieren",
       "description": "Laden Sie eine JSON-Datei hoch, um Links zu importieren",
+      "preview_mode_tip": "Im Vorschaumodus können keine Links importiert werden.",
       "dropzone": "JSON-Datei hierher ziehen oder klicken zum Hochladen",
       "links_found": "{count} Links bereit zum Import",
       "button": "Import starten",

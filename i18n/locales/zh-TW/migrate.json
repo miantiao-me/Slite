@@ -12,6 +12,8 @@
       "title": "匯出連結",
       "description": "將所有連結下載為 JSON 檔案",
       "button": "匯出全部",
+      "button_active": "匯出有效",
+      "button_expired": "匯出已過期",
       "total_links": "連結總數",
       "success": "匯出成功",
       "failed": "匯出失敗"
@@ -19,6 +21,7 @@
     "import": {
       "title": "匯入連結",
       "description": "上傳 JSON 檔案以匯入連結",
+      "preview_mode_tip": "預覽模式不支援匯入連結。",
       "dropzone": "拖曳 JSON 檔案至此或點擊上傳",
       "links_found": "{count} 個連結可匯入",
       "button": "開始匯入",

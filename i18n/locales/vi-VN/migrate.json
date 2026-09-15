@@ -12,6 +12,8 @@
       "title": "Xuất liên kết",
       "description": "Tải xuống tất cả liên kết dưới dạng tệp JSON",
       "button": "Xuất tất cả",
+      "button_active": "Xuất còn hiệu lực",
+      "button_expired": "Xuất đã hết hạn",
       "total_links": "Tổng liên kết",
       "success": "Xuất thành công",
       "failed": "Xuất thất bại"
@@ -19,6 +21,7 @@
     "import": {
       "title": "Nhập liên kết",
       "description": "Tải lên tệp JSON để nhập liên kết",
+      "preview_mode_tip": "Chế độ xem trước không hỗ trợ nhập liên kết.",
       "dropzone": "Kéo thả tệp JSON vào đây hoặc nhấp để tải lên",
       "links_found": "{count} liên kết sẵn sàng nhập",
       "button": "Bắt đầu nhập",

@@ -12,6 +12,8 @@
       "title": "Export Links",
       "description": "Download all your links as a JSON file",
       "button": "Export All",
+      "button_active": "Export Active",
+      "button_expired": "Export Expired",
       "total_links": "Total links",
       "success": "Export successful",
       "failed": "Export failed"
@@ -19,6 +21,7 @@
     "import": {
       "title": "Import Links",
       "description": "Upload a JSON file to import links",
+      "preview_mode_tip": "Preview mode does not support importing links.",
       "dropzone": "Drop JSON file here or click to upload",
       "links_found": "{count} links ready to import",
       "button": "Start Import",

@@ -2,7 +2,7 @@ import type { ImportResult } from '../../shared/schemas/import'
 import type { ExportData } from '../../shared/schemas/link'
 import { afterEach, describe, expect, it } from 'vitest'
 import { LINK_PASSWORD_HASH_PREFIX, LINK_PASSWORD_MASK_PREFIX } from '../../shared/utils/link-password'
-import { deleteStoredLinks, expectStoredHashedPassword, fetchWithAuth, getStoredLink, postJson, useTestServer } from '../utils'
+import { deleteStoredLinks, expectStoredHashedPassword, expireStoredLink, fetchWithAuth, getStoredLink, postJson, server, setStoredLinkEffectiveExpiration, useTestServer } from '../utils'
 
 const createdSlugs = new Set<string>()
 
@@ -46,6 +46,39 @@ describe('/api/link/export', { concurrent: false }, () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toContain('application/json')
     expect(response.headers.get('Cache-Control')).toBe('no-store')
+  })
+
+  it('exports the effective expiration when the link has none', async () => {
+    const payload = createLinkPayload()
+    expect((await postJson('/api/link/create', payload)).status).toBe(201)
+
+    const effectiveExpiresAt = Math.floor(Date.now() / 1000) - 60
+    await setStoredLinkEffectiveExpiration(payload.slug, effectiveExpiresAt)
+
+    const response = await fetchWithAuth('/api/link/export')
+    expect(response.status).toBe(200)
+
+    const data: ExportData = await response.json()
+    const link = data.links.find(link => link.slug === payload.slug)
+    expect(link?.expiration).toBe(effectiveExpiresAt)
+  })
+
+  it('exports links filtered by expiration status', async () => {
+    const activePayload = createLinkPayload()
+    const expiredPayload = createLinkPayload()
+    expect((await postJson('/api/link/create', activePayload)).status).toBe(201)
+    expect((await postJson('/api/link/create', expiredPayload)).status).toBe(201)
+    await expireStoredLink(expiredPayload.slug)
+
+    const activeData: ExportData = await (await fetchWithAuth('/api/link/export?status=active')).json()
+    const activeSlugs = activeData.links.map(link => link.slug)
+    expect(activeSlugs).toContain(activePayload.slug)
+    expect(activeSlugs).not.toContain(expiredPayload.slug)
+
+    const expiredData: ExportData = await (await fetchWithAuth('/api/link/export?status=expired')).json()
+    const expiredSlugs = expiredData.links.map(link => link.slug)
+    expect(expiredSlugs).toContain(expiredPayload.slug)
+    expect(expiredSlugs).not.toContain(activePayload.slug)
   })
 
   it('exports hashed password without exposing plaintext or mask', async () => {
@@ -216,6 +249,19 @@ describe('/api/link/import', { concurrent: false }, () => {
       links: [{ url: 'https://example.com' }],
     })
     expect(response.status).toBe(400)
+  })
+
+  it('rejects imports in preview mode', async () => {
+    await server.stop()
+    try {
+      await server.start({ NUXT_PUBLIC_PREVIEW_MODE: 'true' })
+      const response = await postJson('/api/link/import', { version: '1.0', links: [createLinkPayload()] })
+      expect(response.status).toBe(403)
+    }
+    finally {
+      await server.stop()
+      await server.start()
+    }
   })
 
   it('rejects imports over the server request limit', async () => {

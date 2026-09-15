@@ -12,6 +12,8 @@
       "title": "Ekspor Tautan",
       "description": "Unduh semua tautan Anda sebagai file JSON",
       "button": "Ekspor Semua",
+      "button_active": "Ekspor Aktif",
+      "button_expired": "Ekspor Kedaluwarsa",
       "total_links": "Total tautan",
       "success": "Ekspor berhasil",
       "failed": "Ekspor gagal"
@@ -19,6 +21,7 @@
     "import": {
       "title": "Impor Tautan",
       "description": "Unggah file JSON untuk mengimpor tautan",
+      "preview_mode_tip": "Mode pratinjau tidak mendukung impor tautan.",
       "dropzone": "Jatuhkan file JSON di sini atau klik untuk mengunggah",
       "links_found": "{count} tautan siap diimpor",
       "button": "Mulai Impor",

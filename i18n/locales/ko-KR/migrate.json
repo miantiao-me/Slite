@@ -12,6 +12,8 @@
       "title": "링크 내보내기",
       "description": "모든 링크를 JSON 파일로 다운로드합니다",
       "button": "전체 내보내기",
+      "button_active": "활성 링크보내기",
+      "button_expired": "만료된 링크보내기",
       "total_links": "전체 링크 수",
       "success": "내보내기 성공",
       "failed": "내보내기 실패"
@@ -19,6 +21,7 @@
     "import": {
       "title": "링크 가져오기",
       "description": "링크를 가져오려면 JSON 파일을 업로드하세요",
+      "preview_mode_tip": "미리보기 모드에서는 링크를 가져올 수 없습니다.",
       "dropzone": "JSON 파일을 여기에 놓거나 클릭하여 업로드하세요",
       "links_found": "가져올 링크 {count}개",
       "button": "가져오기 시작",

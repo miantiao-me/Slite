@@ -12,6 +12,8 @@
       "title": "导出链接",
       "description": "将所有链接下载为 JSON 文件",
       "button": "导出全部",
+      "button_active": "导出有效",
+      "button_expired": "导出已过期",
       "total_links": "链接总数",
       "success": "导出成功",
       "failed": "导出失败"
@@ -19,6 +21,7 @@
     "import": {
       "title": "导入链接",
       "description": "上传 JSON 文件以导入链接",
+      "preview_mode_tip": "预览模式不支持导入链接。",
       "dropzone": "拖拽 JSON 文件到此处或点击上传",
       "links_found": "{count} 条链接可导入",
       "button": "开始导入",

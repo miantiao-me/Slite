@@ -69,6 +69,20 @@ export async function expireStoredLink(slug: string) {
   }
 }
 
+export async function setStoredLinkEffectiveExpiration(slug: string, effectiveExpiresAt: number) {
+  await server.stop()
+  const { DatabaseSync } = await import('node:sqlite')
+  const db = new DatabaseSync(join(server.dataDir, 'slite.sqlite'))
+  try {
+    const result = db.prepare('UPDATE links SET effective_expires_at = ? WHERE slug = ?').run(effectiveExpiresAt, slug)
+    expect(Number(result.changes)).toBe(1)
+  }
+  finally {
+    db.close()
+    await server.start()
+  }
+}
+
 export function expectMaskedPassword(password: string | undefined, plainText: string) {
   expect(password).toBeDefined()
   expect(password?.startsWith(LINK_PASSWORD_MASK_PREFIX), password).toBe(true)
