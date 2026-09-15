@@ -1,29 +1,73 @@
+---
+title: Troubleshooting
+description: Fix common deployment, permissions, login, analytics, proxy, redirect, and AI issues in Slite.
+---
+
 # Troubleshooting
 
-## The application cannot start or write data
+## The container fails to start or reports database permissions errors
 
-Use Node.js 24 or newer. Confirm `/data` (or `NUXT_DATA_DIR`) is writable by the process and that `NUXT_SITE_TOKEN`, when set, is at least 8 characters. Check container logs. Only one process may use the directory; stop other containers or development servers that have it open.
+1. **Check directory permissions:** The Slite container runs under the non-root user UID `5483`. If using a host bind mount (e.g. `/srv/slite:/data`), ensure UID `5483` owns the directory:
+   ```sh
+   sudo chown -R 5483:5483 /srv/slite
+   ```
+2. **Ensure single-process exclusivity:** Only one process may hold open the SQLite and DuckDB databases. Verify no development server or secondary container has the same directory mounted.
+3. **Inspect container logs:**
+   ```sh
+   docker compose logs -f
+   ```
 
-## Cannot sign in to the dashboard
+## Cannot sign in to `/dashboard` or API calls return 401
 
-Set `NUXT_SITE_TOKEN` to a value of at least 8 characters and restart the process. Without it, Slite generates a random token for that process only and never exposes it, so the dashboard and every API request return 401. The generated value changes on each restart.
+1. **Verify `NUXT_SITE_TOKEN`:** Ensure `NUXT_SITE_TOKEN` is explicitly defined in `.env`, contains at least 8 characters, and has no whitespace.
+2. **Ephemeral random token fallback:** If `NUXT_SITE_TOKEN` is unset or empty, Slite generates a random token that exists purely in process memory. Public redirects work, but the dashboard and protected API cannot authenticate. Define a token and restart the container:
+   ```sh
+   docker compose up -d
+   ```
+3. **Authorization header format:** API requests must use the exact format `Authorization: Bearer YOUR_SITE_TOKEN`.
 
-## Data disappeared after replacing a container
+## Data disappeared after recreating or updating the container
 
-Check that the same persistent local volume is mounted at `/data`. Data in a container's writable layer is not durable. Do not use `docker compose down -v` during upgrades.
+- **Verify volume mounts:** Check `compose.yaml` to ensure the persistent volume (default `slite-data:/data`) is properly mounted.
+- **Did you use `down -v`?** Running `docker compose down -v` deletes named volumes. During normal maintenance or upgrades, use `docker compose down` (without `-v`) or run `docker compose up -d` directly.
 
-## Country and city charts are empty
+## Country and city analytics charts are empty
 
-First, check which GeoIP database the process resolved. Release Docker images bundle DB-IP City Lite, so country, region, city, and coordinates work without extra setup; a source build or custom image without a readable database fails open and leaves geographic fields empty. City Lite has no time-zone or postcode data. Enabling proxy trust does not add geographic metadata; it only changes which client IP is trusted. See [GeoIP database](/deployment/docker#geoip-database).
+1. **GeoIP database resolution:** Release Docker images bundle the DB-IP City Lite database, which activates automatically. For source builds or custom images, ensure a valid MMDB file exists at `/data/geoip.mmdb` or set `NUXT_GEOIP_PATH`.
+2. **Fail-open behavior:** When no database is found, Slite fails open by leaving geographic fields empty rather than interrupting redirects.
+3. **No time-zone data:** City Lite contains country, region, city, and coordinates, but does not provide time zones. Slite never invents missing time zones.
+4. **Proxy configuration:** Setting `NUXT_TRUST_PROXY=true` changes which client IP is inspected, but does not generate location data on its own.
 
-## Client addresses are incorrect behind a proxy
+## Client IP addresses are incorrect behind a reverse proxy
 
-Keep proxy trust disabled unless the application is reachable only through a trusted proxy. Configure that proxy to overwrite forwarded headers before setting `NUXT_TRUST_PROXY=true`.
+1. Ensure direct connections to the application port are blocked and all traffic passes through your reverse proxy.
+2. Configure the reverse proxy to overwrite incoming `X-Forwarded-For` or provide a trusted header such as `CF-Connecting-IP`.
+3. Set `NUXT_TRUST_PROXY=true` in `.env`. If using a specific header, set `NUXT_CLIENT_IP_HEADER=CF-Connecting-IP`.
 
-## AI is unavailable
+## Realtime 3D globe events arrive in bursts or feel delayed
 
-`NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are empty by default; set both to enable AI. Check provider access and the selected model. `NUXT_AI_API_KEY` can be empty when the provider does not require one. AI is optional; ordinary links work without it.
+This is expected behavior. The realtime dashboard polls DuckDB approximately every 10 seconds and replays queued events at roughly one per second. It is a pseudo-live visual overview, not an SSE or WebSocket stream. Verify that the view is not paused and the browser tab remains active.
 
-## How do I migrate or restore?
+## Custom short codes lose uppercase letters
 
-For old instances, [export and import links manually](/features/import-export). For a complete Slite restore, use a [stopped-instance copy of all `/data`](/features/backups). Link backups alone do not restore analytics or images.
+Set `NUXT_CASE_SENSITIVE=true` in `.env` and restart the container. Case sensitivity applies only to **custom** short codes; auto-generated random codes always remain lowercase. Existing links are not retroactively renamed.
+
+## Cloaked page is blank or refuses to load
+
+The destination website likely enforces anti-framing policies (`X-Frame-Options` or `Content-Security-Policy: frame-ancestors`). Disable cloaking for that link. Most third-party authentication and checkout pages disallow framing by design.
+
+## Safe browsing did not flag an unsafe domain
+
+Automated DNS-over-HTTPS checks execute only when creating or editing a link with `unsafe` left unset. An explicit manual `true` or `false` always takes priority. If the DNS lookup fails or times out, Slite allows the link instead of blocking it.
+
+## AI suggestions return HTTP 501 or fail
+
+1. **Both variables required:** AI stays disabled until **both** `NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are set in `.env`.
+2. **Outbound network:** Ensure the container can reach your provider's API endpoint.
+3. **Model identifier:** Verify that the configured model name is valid and enabled on your provider account.
+
+## Import skips or rejects records
+
+- **Active slug conflicts:** Existing active short codes are skipped to protect current links from accidental overwrite.
+- **Batch limits:** Ensure your batch size does not exceed `NUXT_IMPORT_REQUEST_LIMIT` (default 100).
+- **Password values:** Use protected password strings from Slite/Sink JSON exports. Masked placeholder strings copied from dashboard inputs are invalid.

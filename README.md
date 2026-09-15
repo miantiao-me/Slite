@@ -2,7 +2,7 @@
 
 **A Simple, Self-Hosted Link Shortener with Analytics.**
 
-[Documentation](docs/index.md) · [Docker deployment](docs/deployment/docker.md) · [API Reference](docs/api/index.md)
+[Website](https://slite.cool) · [Documentation](https://docs.slite.cool) · [API Reference](https://slite.cool/_docs/scalar)
 
 ![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?style=flat&logo=docker&logoColor=white)
 ![Node.js 24](https://img.shields.io/badge/Node.js%2024-5FA04E?style=flat&logo=nodedotjs&logoColor=white)
@@ -21,9 +21,9 @@
 
 - **🔗 URL Shortening:** Compress your URLs to their minimal length.
 - **📈 Analytics:** Monitor link analytics and gather insightful statistics.
-- **🏠 Self-Hosted:** Run one Node.js process with Docker or Compose on your own server, with no cloud account.
+- **🏠 Self-Hosted:** Run a single Node.js 24+ process with Docker or Compose on your own server, with no cloud dependencies.
 - **🎨 Customizable Slug:** Support personalized slugs, UTM parameters, and optional case-sensitive slug matching through configuration.
-- **🪄 AI Assistance:** Optionally use an OpenAI-compatible provider to generate slugs and OpenGraph metadata.
+- **🪄 AI Assistance:** Optionally connect an OpenAI-compatible provider via xsai to generate slugs and OpenGraph metadata.
 - **⏰ Link Control:** Set expirations, passwords, and unsafe-link warning pages.
 - **📱 Smart Routing:** Redirect visitors by device or country.
 - **🖼️ Social Preview:** Customize social previews with titles, descriptions, and images.
@@ -37,17 +37,17 @@
 >
 > Slite focuses on **individuals and small teams** who want a simple, self-hosted shortener on their own server.
 >
-> For professional / business needs (managed service, multi-user, SLA, and more), use **[S.EE](https://slite.cool/see)**.
+> For professional / business needs (managed service, multi-user, SLA, and more), use **[S.EE](https://sink.cool/see)**.
 
 ## 🔀 Sibling versions
 
-Slite v0 and [Sink](https://github.com/miantiao-me/Sink) are sibling versions of the same link-management and analytics project. Sink runs on Cloudflare's serverless platform, while Slite runs as a local Node.js/Docker process. They keep features, API contracts, and file organization compatible with each other wherever practical. Neither version is a legacy branch, and Slite is not a fork replacement for Sink.
+Slite and [Sink](https://github.com/miantiao-me/Sink) are sibling versions of the same link-management and analytics project. Sink runs on Cloudflare's serverless platform, while Slite runs as a local Node.js 24+/Docker process with authoritative SQLite storage and local DuckDB analytics. They keep features, API contracts, and file organization compatible with each other wherever practical. Neither version is a legacy branch, and Slite is not a fork replacement for Sink.
 
 ## 🧱 Technologies Used
 
 - **Framework**: [Nuxt 4](https://nuxt.com/) (client-only) served by a [Nitro](https://nitro.build/) Node.js server
 - **Runtime**: Node.js 24 or newer, one process per local data directory
-- **Database**: SQLite through Node's built-in `node:sqlite` is the authoritative link store; an [unstorage](https://unstorage.unjs.io/) memory cache is rebuildable and never authoritative
+- **Database**: SQLite through Node's built-in `node:sqlite` as the authoritative link store; an [unstorage](https://unstorage.unjs.io/) memory cache is rebuildable and never authoritative
 - **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
 - **Analytics Engine**: Local [DuckDB](https://duckdb.org/) at `/data/analytics.duckdb`
 - **Object Storage**: [unstorage](https://unstorage.unjs.io/) filesystem driver for uploaded images (`/data/files/images`) and link backups (`/data/backups`)
@@ -82,31 +82,31 @@ cp .env.example .env
 docker compose up -d
 ```
 
-The supplied Compose service pulls `ghcr.io/miantiao-me/slite:latest`, publishes host port `5483`, and mounts the named volume `slite-data` at `/data`. Open `http://localhost:5483/dashboard` and sign in with `NUXT_SITE_TOKEN`, which must be at least 8 characters. To build the image from this source tree instead of pulling it, run `docker compose up -d --build`.
+The supplied Compose service pulls `ghcr.io/miantiao-me/slite:latest`, publishes host port `5483`, and mounts the named volume `slite-data` at `/data`. Open `http://localhost:5483/dashboard` and sign in with `NUXT_SITE_TOKEN`, which must be at least 8 characters with no whitespace. To build the image from source instead of pulling it, run `docker compose up -d --build`.
 
 The [`Container` workflow](.github/workflows/docker.yml) builds and publishes the image on pushes to the default `master` branch, on tag pushes, and on manual dispatch runs. The default branch publishes `latest` without requiring a tag, while a tag publishes only its own image tag.
 
 > [!IMPORTANT]
-> Without `NUXT_SITE_TOKEN`, Slite still serves public short links, but it generates a random token that exists only in that process. The dashboard and API cannot be authenticated, the value is never logged or written to disk, and it changes on every restart. Configure a token and restart to administer the instance.
+> Without `NUXT_SITE_TOKEN`, Slite still serves public short links, but it generates a random token that exists only in memory for that process. The dashboard and API cannot be authenticated, the value is never logged or written to disk, and it changes on every restart. Configure a token and restart to administer the instance.
 
-For public deployments, put a TLS reverse proxy in front of Slite and keep `NUXT_TRUST_PROXY=false` unless the application is reachable only through that proxy and it overwrites forwarded headers. See [Docker and Compose](docs/deployment/docker.md) and [Upgrading Slite](docs/deployment/upgrading.md).
+For public deployments, put a TLS reverse proxy in front of Slite and keep `NUXT_TRUST_PROXY=false` unless the application is reachable only through that proxy and it overwrites forwarded headers. See [Docker and Compose](https://docs.slite.cool/deployment/docker) and [Upgrading Slite](https://docs.slite.cool/deployment/upgrading).
 
 ## ⚒️ Configuration
 
 Copy `.env.example` to `.env` and restart the process after changing runtime configuration. Key variables:
 
-| Variable                   | Default | Purpose                                                                                      |
-| -------------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `NUXT_SITE_TOKEN`          | empty   | Dashboard/API token; at least 8 characters when set; unset keeps administration inaccessible |
-| `NUXT_DATA_DIR`            | `/data` | Writable local persistent directory                                                          |
-| `NUXT_TRUST_PROXY`         | `false` | Trust forwarded client information only behind a controlled proxy                            |
-| `NUXT_GEOIP_PATH`          | empty   | Optional MMDB override with priority over the bundled database                               |
-| `NUXT_DISABLE_AUTO_BACKUP` | `false` | Set to `true` to stop the daily automatic link backup                                        |
-| `NUXT_AI_BASE_URL`         | empty   | OpenAI-compatible API base URL; required with the model to enable AI                         |
-| `NUXT_AI_MODEL`            | empty   | Model identifier required with the base URL to enable AI                                     |
-| `NUXT_AI_API_KEY`          | empty   | AI provider key; may stay empty when the provider does not require one                       |
+| Variable                   | Default | Purpose                                                                                                         |
+| -------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
+| `NUXT_SITE_TOKEN`          | empty   | Dashboard/API token; at least 8 characters without whitespace when set; unset keeps administration inaccessible |
+| `NUXT_DATA_DIR`            | `/data` | Writable local persistent directory                                                                             |
+| `NUXT_TRUST_PROXY`         | `false` | Trust forwarded client information only behind a controlled proxy                                               |
+| `NUXT_GEOIP_PATH`          | empty   | Optional MMDB override with priority over the bundled database                                                  |
+| `NUXT_DISABLE_AUTO_BACKUP` | `false` | Set to `true` to stop the automatic link backup (runs every 24 hours after startup)                             |
+| `NUXT_AI_BASE_URL`         | empty   | OpenAI-compatible API base URL; required with the model to enable AI                                            |
+| `NUXT_AI_MODEL`            | empty   | Model identifier required with the base URL to enable AI                                                        |
+| `NUXT_AI_API_KEY`          | empty   | AI provider key; may stay empty when the provider does not require one                                          |
 
-The full reference, including webhook and redirect options, lives in [Configuration](docs/configuration/index.md).
+The full reference, including webhook and redirect options, lives in [Configuration](https://docs.slite.cool/configuration/).
 
 ### GeoIP
 
@@ -120,9 +120,9 @@ A readable database is resolved in this order: `NUXT_GEOIP_PATH`, `/data/geoip.m
 
 ### Optional AI
 
-AI is disabled until both `NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are set; until then the AI routes return `501` without an outbound request. Requests send only the URL you provide, never page content or secrets. See [Optional AI](docs/features/ai.md).
+AI is disabled until both `NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are set; until then the AI routes return `501` without an outbound request. Requests send only the URL you provide, never page content or secrets. See [Optional AI](https://docs.slite.cool/features/ai).
 
-## 💾 Data and Backup
+## 💾 Storage & Backup
 
 Mount a **local persistent volume** at `/data` and run only one process against it. Do not use clustered workers, multiple replicas, or a shared network filesystem.
 
@@ -135,9 +135,9 @@ Mount a **local persistent volume** at `/data` and run only one process against 
 
 The link cache uses the unstorage memory driver: it lives only in the running process, is repopulated from SQLite on demand, and is never a second source of truth. Committed link writes invalidate cached entries, and cache failures fall back to SQLite. There is nothing to back up or restore for caching.
 
-Automatic link backups run daily and retain the latest 30 automatic backups; manual backups are never removed by automatic retention. Set `NUXT_DISABLE_AUTO_BACKUP=true` to disable the schedule.
+Automatic link backups run every 24 hours after process startup and retain the latest 30 automatic backups; manual backups are never removed by automatic retention. Set `NUXT_DISABLE_AUTO_BACKUP=true` to disable the schedule.
 
-Link backups are **JSON exports, not complete snapshots**: they exclude the link cache, DuckDB analytics, and uploaded images. For a complete backup, stop the container (`docker compose stop`), copy the **entire `/data` directory**, including `slite.sqlite`, store configuration and secrets separately, then start it again (`docker compose start`). See [Backups and Restore](docs/features/backups.md).
+Link backups are **JSON exports, not complete snapshots**: they exclude the link cache, DuckDB analytics, and uploaded images. For a complete backup, stop the container (`docker compose stop`), copy the **entire `/data` directory**, including `slite.sqlite`, store configuration and secrets separately, then start it again (`docker compose start`). See [Backups and Restore](https://docs.slite.cool/features/backups).
 
 ## 🔌 API
 
@@ -151,7 +151,7 @@ Each instance serves its own OpenAPI reference. The documentation pages are anon
 Authorization: Bearer YOUR_SITE_TOKEN
 ```
 
-See [REST API](docs/api/index.md) for route groups and [Import and Export](docs/features/import-export.md) for moving records.
+See [REST API](https://docs.slite.cool/api/) for route groups and [Import and Export](https://docs.slite.cool/features/import-export) for moving records.
 
 ## 🤖 AI Skills
 
@@ -187,7 +187,7 @@ Slite does not ship a native MCP server, but its OpenAPI documentation works wit
 
 ## 🙋🏻 FAQs
 
-[Troubleshooting](docs/faqs.md)
+[Troubleshooting](https://docs.slite.cool/faqs)
 
 ## 💻 Development
 
@@ -212,13 +212,13 @@ pnpm build:docs
 
 ## 📚 Documentation
 
-- [Getting started](docs/guide/getting-started.md)
-- [Architecture](docs/guide/architecture.md)
-- [Docker deployment](docs/deployment/docker.md)
-- [Configuration](docs/configuration/index.md)
-- [Backups and restore](docs/features/backups.md)
-- [Import and export](docs/features/import-export.md)
-- [REST API](docs/api/index.md)
+- [Getting Started](https://docs.slite.cool/guide/getting-started)
+- [Architecture](https://docs.slite.cool/guide/architecture)
+- [Docker Deployment](https://docs.slite.cool/deployment/docker)
+- [Configuration](https://docs.slite.cool/configuration/)
+- [Backups and Restore](https://docs.slite.cool/features/backups)
+- [Import and Export](https://docs.slite.cool/features/import-export)
+- [REST API](https://docs.slite.cool/api/)
 
 Build the documentation with `pnpm build:docs`, or serve it locally with `pnpm dev:docs`.
 

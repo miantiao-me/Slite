@@ -16,8 +16,8 @@ export function useGithubStats() {
   )
 
   const rawStats = computed(() => ({
-    stars: data.value?.stars ?? 6000,
-    forks: data.value?.forks ?? 4000,
+    stars: data.value?.stars ?? 0,
+    forks: data.value?.forks ?? 0,
   }))
 
   return { rawStats }

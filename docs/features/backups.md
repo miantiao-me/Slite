@@ -1,26 +1,70 @@
+---
+title: Backups and Restore
+description: Understand link JSON snapshots in local storage, automatic backup retention, and full stopped-instance system backups.
+---
+
 # Backups and Restore
 
-## Link backups
+Slite offers two distinct backup levels: **application link JSON snapshots** for portability, and **complete stopped-instance filesystem backups** for disaster recovery.
 
-Application backups stored in `/data/backups` are **link JSON exports, not complete database snapshots**. They do not include the process-local unstorage memory link cache, DuckDB analytics, uploaded image files, or all application state. The link cache rebuilds automatically and does not need restoring. Keep copies outside the host: files on the same disk are not protection against disk loss.
+## 1. Link JSON snapshots
 
-Automatic link backups run daily by default and retain the latest 30 automatic backups. Manual backups are not removed by automatic retention. Set `NUXT_DISABLE_AUTO_BACKUP=true` on the running application to disable automatic backups; manual backups remain available.
+Application backups are written to `/data/backups` via the unstorage filesystem driver:
 
-Restore compatible exported links with the ordinary [import API](/features/import-export). Import is not a full-instance restore and does not overwrite active slug conflicts.
+- **Contents:** A complete JSON snapshot of all short-link records stored in SQLite, including custom routing rules, creation times, tags, and protected password hashes.
+- **Exclusions:** Snapshots do **not** include DuckDB visit analytics, uploaded images, or the process-local in-memory link cache.
+- **Automation:** Scheduled link backups run every 24 hours after process startup and automatically retain the latest 30 snapshots. Manual backups are never removed by automatic retention.
+- **Disable automation:** Set `NUXT_DISABLE_AUTO_BACKUP=true` in `.env` and recreate the container.
+- **Manual trigger:** Initiate a manual snapshot through the dashboard or by sending `POST /api/backup`.
 
-## Complete backup
+File naming conventions:
 
-For a consistent full backup:
+- Automatic snapshots: `backups/links-<timestamp>.json`
+- Manual snapshots: `backups/manual-links-<timestamp>.json`
 
-1. Stop the container with `docker compose stop` and confirm no other process uses its data directory.
-2. Copy or archive the **entire mounted `/data` directory** from the host or volume, including `slite.sqlite` and its sidecar files if present, `analytics.duckdb`, `files/images`, and `backups`.
-3. Store deployment configuration and secrets separately and securely, together with the application revision.
-4. Start the container with `docker compose start`.
+::: warning Snapshots contain sensitive credentials
+Because snapshots contain protected password hashes and unlisted destination URLs, restrict read permissions on `/data/backups` and treat snapshot files as confidential.
+:::
 
-Do not copy only the main database files while Slite is running. A live filesystem copy is not guaranteed to be consistent.
+To restore links from a JSON snapshot, submit the records through the [Import API](/features/import-export).
 
-## Complete restore
+## 2. Complete stopped-instance backup
 
-Stop Slite, restore the entire saved directory to its local volume, ensure the container user can read and write it, and start the matching application revision. Do not merge a snapshot into a running instance. Verify sign-in, redirects, images, and analytics before reopening traffic.
+To preserve everything — authoritative links, DuckDB analytics history, uploaded images, and application state — take a complete cold backup of the mounted `/data` directory.
 
-The link cache uses the unstorage memory driver and lives only in the running process, so it is repopulated from SQLite on demand. Restoring cached link entries is unnecessary.
+### Step-by-step full backup
+
+1. **Stop the container:**
+   ```sh
+   docker compose stop
+   ```
+   _Do not copy database files while Slite is running; active writes can result in corrupted SQLite or DuckDB files._
+2. **Archive the `/data` directory:**
+   Copy or archive the entire mounted volume directory from the host:
+   - `slite.sqlite` (authoritative link store)
+   - `analytics.duckdb` (visit analytics database)
+   - `files/images` (uploaded preview images)
+   - `backups` (link JSON snapshots)
+3. **Save environment configuration:**
+   Securely back up `.env` and record your current Docker image tag or Git commit hash.
+4. **Restart the container:**
+   ```sh
+   docker compose start
+   ```
+
+Store backup archives off-site or on an independent disk volume.
+
+## 3. Complete disaster restore
+
+To restore a Slite instance to a previous state:
+
+1. Stop the running container (`docker compose stop`).
+2. Replace the contents of the mounted `/data` volume with your saved backup archive.
+3. Ensure user UID `5483` has read and write permissions across the restored directory:
+   ```sh
+   sudo chown -R 5483:5483 /path/to/data
+   ```
+4. Start the container matching the original application version (`docker compose up -d`).
+5. Open `/dashboard` and verify logins, short-link redirects, analytics charts, and images.
+
+The in-memory link cache lives purely in process memory; it repopulates from SQLite on demand and requires no manual restore steps.

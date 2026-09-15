@@ -1,22 +1,51 @@
+---
+title: Import and Export
+description: Transfer short links between compatible instances using paginated JSON, preserving expired links and protected passwords.
+---
+
 # Import and Export
 
-Use authenticated `/api/link/export` and `/api/link/import` requests to move links between compatible instances. Send `Authorization: Bearer YOUR_SITE_TOKEN`; see [API](/api/).
+Use the authenticated `/api/link/export` and `/api/link/import` REST APIs to transfer short links between compatible Slite and Sink instances.
+
+Requests must include your site token:
+
+```http
+Authorization: Bearer YOUR_SITE_TOKEN
+```
 
 ## Export
 
-Export returns JSON pages. Request subsequent pages using the returned cursor until `list_complete` is true. Retain every page. Exported records include link settings and protected password values rather than plaintext passwords.
+The export API streams records from SQLite in paginated JSON chunks:
+
+- Request subsequent pages using the returned `cursor` parameter until `list_complete` evaluates to `true`.
+- Each record exports full routing configurations, creation timestamps, tags, comments, social preview metadata, and **protected password hashes** (plaintext passwords are never exposed).
+- Export uses a fixed page size of 50 records.
+
+Retain all exported JSON pages when backing up or transferring link catalogs.
 
 ## Import
 
-Submit records in batches within the API's request limit. Inspect per-item results and retry failures only after correcting their cause.
+The import API ingests JSON link objects in batches up to `NUXT_IMPORT_REQUEST_LIMIT` (default 100 records per request).
 
-- Expired records are accepted.
-- Active short-code conflicts are skipped rather than overwritten.
-- Short codes follow the destination instance's case setting.
-- Compatible protected passwords can be imported; masked dashboard placeholders are not valid passwords.
+In the dashboard, `NUXT_PUBLIC_IMPORT_BATCH_LIMIT` (default 50) controls client-side import chunking, sending at most half that limit (default 25 records) per request.
+
+- **Format verification:** Slite verifies the batch payload schema before persisting records, returning individual item statuses (`success`, `skip`, or `fail`).
+- **Conflict handling:** Existing active short codes are skipped rather than overwritten.
+- **Expired links:** Links whose expiration timestamps have already passed are accepted to preserve historical records.
+- **Case conventions:** Imported custom short codes conform to the receiving instance's `NUXT_CASE_SENSITIVE` configuration.
+- **Protected passwords:** Exported protected password hashes from compatible Slite or Sink instances import seamlessly without requiring plaintext passwords. Masked placeholder strings from the dashboard UI are invalid and rejected.
 
 ## Moving an existing instance
 
-Export from the original instance and import into Slite manually. Keep the original deployment available until you have verified the imported links.
+When migrating to a new server or moving links from an existing deployment:
 
-Link exports do not include the rebuildable process-local link cache, analytics, uploaded image files, or a full snapshot of application state. The link cache does not need restoring. Copy images separately and review URLs that still point to the original host. Keep the original deployment until redirects and protected links have been verified. For a complete backup of an existing Slite instance, [stop it and copy `/data`](/features/backups).
+1. Export all link pages as JSON from the old instance.
+2. Ingest the JSON files into the new Slite deployment via the import API or dashboard.
+3. Transfer uploaded preview images from `files/images` to the new host.
+4. Keep the original instance online until you have verified routing and redirects on the new host.
+
+::: tip Import is not a full-system restore
+Link exports do not include DuckDB visit analytics, process-local in-memory caches, or uploaded image binaries.
+
+The in-memory link cache rebuilds automatically and requires no restoration. For a complete system-level backup of all links, analytics, and assets, perform a [stopped-instance `/data` backup](/features/backups).
+:::
