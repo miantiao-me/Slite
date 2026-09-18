@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue"
-import { onBeforeUnmount, onMounted, useTemplateRef } from "vue"
-import { cn } from "@/lib/utils"
-import { useMessageScrollerContext } from "./useMessageScroller"
+import type { HTMLAttributes } from 'vue'
+import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue'
+import { cn } from '@/lib/utils'
+import { useMessageScrollerContext } from './useMessageScroller'
 
 const props = defineProps<{
-  class?: HTMLAttributes["class"]
-  spacerClass?: HTMLAttributes["class"]
+  class?: HTMLAttributes['class']
+  spacerClass?: HTMLAttributes['class']
 }>()
 
 const {
@@ -16,8 +16,8 @@ const {
   setSpacerElement,
 } = useMessageScrollerContext()
 
-const contentRef = useTemplateRef<HTMLElement>("content")
-const spacerRef = useTemplateRef<HTMLElement>("spacer")
+const contentRef = useTemplateRef<HTMLElement>('content')
+const spacerRef = useTemplateRef<HTMLElement>('spacer')
 
 let mutationObserver: MutationObserver | null = null
 let resizeObserver: ResizeObserver | null = null
@@ -32,12 +32,12 @@ onMounted(() => {
   setSpacerElement(spacerRef.value ?? null)
   handleContentChange()
 
-  if (typeof MutationObserver !== "undefined") {
+  if (typeof MutationObserver !== 'undefined') {
     mutationObserver = new MutationObserver(() => handleContentChange())
     mutationObserver.observe(content, { childList: true })
   }
 
-  if (typeof ResizeObserver !== "undefined") {
+  if (typeof ResizeObserver !== 'undefined') {
     resizeObserver = new ResizeObserver(() => {
       window.cancelAnimationFrame(resizeFrame)
       resizeFrame = window.requestAnimationFrame(handleResize)

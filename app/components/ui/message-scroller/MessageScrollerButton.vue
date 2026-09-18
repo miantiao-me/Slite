@@ -1,31 +1,31 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue"
-import type { MessageScrollerButtonDirection } from "./useMessageScroller"
+import type { HTMLAttributes } from 'vue'
+import type { MessageScrollerButtonDirection } from './useMessageScroller'
 import type { ButtonVariants } from '@/components/ui/button'
-import { ArrowDownIcon } from "@lucide/vue"
-import { computed } from "vue"
-import { cn } from "@/lib/utils"
+import { ArrowDownIcon } from '@lucide/vue'
+import { computed } from 'vue'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { useMessageScroller, useMessageScrollerScrollable } from "./useMessageScroller"
+import { useMessageScroller, useMessageScrollerScrollable } from './useMessageScroller'
 
 const props = withDefaults(defineProps<{
-  class?: HTMLAttributes["class"]
+  class?: HTMLAttributes['class']
   direction?: MessageScrollerButtonDirection
   behavior?: ScrollBehavior
-  variant?: ButtonVariants["variant"]
-  size?: ButtonVariants["size"]
+  variant?: ButtonVariants['variant']
+  size?: ButtonVariants['size']
 }>(), {
-  direction: "end",
-  behavior: "smooth",
-  variant: "secondary",
-  size: "icon-sm",
+  direction: 'end',
+  behavior: 'smooth',
+  variant: 'secondary',
+  size: 'icon-sm',
 })
 
 const { scrollToEnd, scrollToStart } = useMessageScroller()
 const scrollable = useMessageScrollerScrollable()
 
 const active = computed(() =>
-  props.direction === "start" ? scrollable.value.start : scrollable.value.end)
+  props.direction === 'start' ? scrollable.value.start : scrollable.value.end)
 
 function onClick(event: MouseEvent) {
   if (!active.value)
@@ -34,7 +34,7 @@ function onClick(event: MouseEvent) {
   target?.blur()
   if (event.defaultPrevented)
     return
-  if (props.direction === "start")
+  if (props.direction === 'start')
     scrollToStart({ behavior: props.behavior })
   else
     scrollToEnd({ behavior: props.behavior })

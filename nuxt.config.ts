@@ -1,23 +1,8 @@
-import type { ModuleOptions, Nuxt } from 'nuxt/schema'
 import { cp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import process from 'node:process'
 import tailwindcss from '@tailwindcss/vite'
 import { currentLocales } from './i18n/i18n'
-
-// The shadcn registry's unused `message-scroller` directory has template type
-// errors under strict Vue checking. Drop it from component scanning (this
-// hook registers after `shadcn-nuxt`) so the generated component declarations
-// cannot pull it back into the type-check program despite the `exclude` below.
-function ignoreUnusedMessageScroller(_options: ModuleOptions, nuxt: Nuxt) {
-  const messageScrollerDir = '/components/ui/message-scroller/'
-  nuxt.hook('components:extend', (components) => {
-    for (let index = components.length - 1; index >= 0; index--) {
-      if (components[index]?.filePath.includes(messageScrollerDir))
-        components.splice(index, 1)
-    }
-  })
-}
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -28,13 +13,8 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@pinia/nuxt',
     'shadcn-nuxt',
-    ignoreUnusedMessageScroller,
   ],
-  devtools: { enabled: true },
   css: ['@/assets/css/tailwind.css'],
-  colorMode: {
-    classSuffix: '',
-  },
   runtimeConfig: {
     siteToken: '',
     // `nuxt dev` keeps runtime data inside the repo; builds and Docker use /data.
@@ -57,7 +37,7 @@ export default defineNuxtConfig({
     disableBotAccessLog: false,
     disableAutoBackup: false,
     notFoundRedirect: '',
-    safeBrowsingDoh: '', // Empty disables the DoH check; set a DNS-over-HTTPS JSON endpoint to enable it
+    safeBrowsingDoh: '', // Set to DoH URL to enable auto-detection, e.g. https://family.cloudflare-dns.com/dns-query
     webhookUrl: '',
     webhookSecret: '',
     public: {
@@ -94,9 +74,6 @@ export default defineNuxtConfig({
       compilerOptions: {
         types: ['vite/client'],
       },
-      // The unused shadcn `message-scroller` components fail strict template
-      // checking; keep the directory out of the app type-check program.
-      exclude: ['../app/components/ui/message-scroller/**'],
     },
   },
   compatibilityDate: '2026-07-13',
@@ -172,9 +149,6 @@ export default defineNuxtConfig({
     plugins: [
       tailwindcss(),
     ],
-    worker: {
-      format: 'es',
-    },
     optimizeDeps: {
       include: [
         '@internationalized/date',
@@ -222,14 +196,6 @@ export default defineNuxtConfig({
     defaultLocale: 'en-US',
   },
   shadcn: {
-    /**
-     * Prefix for all the imported component
-     */
     prefix: '',
-    /**
-     * Directory that the component lives in.
-     * @default "./components/ui"
-     */
-    componentDir: './app/components/ui',
   },
 })
