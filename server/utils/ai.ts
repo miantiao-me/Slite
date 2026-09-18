@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import { generateText } from '@xsai/generate-text'
+import { APICallError } from '@xsai/shared'
 import { destr } from 'destr'
 
 export interface AiMessage {
@@ -16,14 +17,42 @@ export function requireAiConfig(event: H3Event) {
 
 export async function generateAiText(event: H3Event, messages: AiMessage[]): Promise<string> {
   const { aiApiKey, aiBaseUrl, aiModel } = requireAiConfig(event)
-  const { text } = await generateText({
+  const base = {
     apiKey: aiApiKey || undefined,
     baseURL: aiBaseUrl.endsWith('/') ? aiBaseUrl : `${aiBaseUrl}/`,
     model: aiModel,
     messages,
     abortSignal: AbortSignal.timeout(15000),
-  })
-  return text ?? ''
+  }
+  // Disable reasoning for low-latency suggestions: each OpenAI-compatible
+  // provider uses a different request field, so send them all and let the
+  // provider pick the ones it understands. Strict providers that reject
+  // unknown fields (e.g. OpenAI) fall back to smaller param sets.
+  const attempts: Record<string, unknown>[] = [
+    {
+      reasoningEffort: 'none', // OpenAI, DeepSeek, GLM 5.2+, Ollama, Gemini, Claude gateways
+      thinking: { type: 'disabled' }, // Ark (Doubao), GLM, DeepSeek, Kimi K2.x, Anthropic
+      enable_thinking: false, // Alibaba Bailian (Qwen)
+      chat_template_kwargs: { enable_thinking: false }, // vLLM/SGLang templates
+    },
+    { reasoningEffort: 'none' },
+    {},
+  ]
+  let lastError: unknown
+  for (const extra of attempts) {
+    try {
+      const { text } = await generateText({ ...base, ...extra })
+      return text ?? ''
+    }
+    catch (error) {
+      lastError = error
+      const isArgumentError = error instanceof APICallError
+        && (error.statusCode === 400 || error.statusCode === 422)
+      if (!isArgumentError)
+        throw error
+    }
+  }
+  throw lastError
 }
 
 function stripCodeFence(content: string): string {
