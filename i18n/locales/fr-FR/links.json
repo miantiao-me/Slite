@@ -44,6 +44,10 @@
     },
     "form": {
       "url": "URL",
+      "url_description": "Saisissez une URL complète, comme https://example.com. {max} caractères maximum.",
+      "url_required": "L’URL est obligatoire.",
+      "url_invalid": "Le format de l’URL est invalide. Saisissez une URL complète, comme https://example.com.",
+      "url_too_long": "L’URL contient {length} caractères, mais la limite est de {max}.",
       "slug": "Slug",
       "comment": "Commentaire",
       "tags": "Tags",
@@ -66,7 +70,7 @@
       "redirect_with_query_label": "Rediriger avec les paramètres de requête",
       "redirect_with_query_description": "Ajouter les paramètres de requête du lien court à l'URL de destination. Remplace le paramètre global.",
       "cloaking_label": "Activer le masquage de lien",
-      "cloaking_description": "Affiche votre lien court dans la barre d'adresse du navigateur au lieu de l'URL de destination. Peut ne pas fonctionner pour les sites qui bloquent l'intégration iframe.",
+      "cloaking_description": "Affiche votre lien court dans la barre d'adresse du navigateur au lieu de l'URL de destination. Peut ne pas fonctionner pour les sites qui bloquent l'intégration iframe. Ne peut pas être combiné avec le proxy inverse.",
       "unsafe_label": "Marquer comme dangereux",
       "unsafe_description": "Afficher une page d'avertissement avant la redirection. Les visiteurs doivent confirmer pour continuer.",
       "password_label": "Protection par mot de passe",
@@ -109,7 +113,9 @@
       "utm_clear": "Effacer",
       "utm_invalid_url": "Saisissez une URL valide pour prévisualiser et appliquer les paramètres UTM.",
       "ai_og_generate": "Générer l'OpenGraph IA",
-      "duplicate_url_hint": "Cette URL existe déjà sous {shortLink}"
+      "duplicate_url_hint": "Cette URL existe déjà sous {shortLink}",
+      "proxy_label": "Activer le proxy inverse",
+      "proxy_description": "Transfère de manière transparente le contenu de l'URL de destination sans redirection 301/302. Idéal pour les abonnements et les API. Ne peut pas être combiné avec le masquage de lien."
     },
     "dialogs": {
       "discard": {

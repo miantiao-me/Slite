@@ -144,6 +144,18 @@ export class TestServer {
       NUXT_AI_MODEL: '',
       NUXT_TRUST_PROXY: 'false',
       NUXT_PUBLIC_PREVIEW_MODE: '',
+      NUXT_PUBLIC_HOME_URL: '',
+      NUXT_HOME_URL: '',
+      NUXT_PUBLIC_LINK_PROXY_ENABLED: '',
+      // Keep ambient corporate-proxies and Node env-proxy opts out of tests;
+      // proxy-mode suites opt in explicitly through restart overrides.
+      NODE_USE_ENV_PROXY: '',
+      HTTP_PROXY: '',
+      HTTPS_PROXY: '',
+      NO_PROXY: '',
+      http_proxy: '',
+      https_proxy: '',
+      no_proxy: '',
       ...overrides,
     }
   }

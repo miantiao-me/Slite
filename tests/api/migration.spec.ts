@@ -72,7 +72,7 @@ describe('v0 flat-migration database upgrade', () => {
   it('starts without missing migrations and backfills all five records', () => {
     expect(v0Server.logs).not.toContain('do not match any local migration')
     const rows = readMigrationRows(v0Server.dataDir)
-    expect(LOCAL_MIGRATIONS).toHaveLength(6)
+    expect(LOCAL_MIGRATIONS).toHaveLength(7)
     expect(rows).toHaveLength(LOCAL_MIGRATIONS.length)
     expect(rows.slice(0, 5).map(row => row.name)).toEqual([
       '20260711151535_workable_killraven',
@@ -89,8 +89,8 @@ describe('v0 flat-migration database upgrade', () => {
       1784369840025,
       1786005047738,
     ])
-    expect(rows[5].name).toBe(LOCAL_MIGRATIONS[5])
-    expect(rows[5].applied_at).not.toBeNull()
+    expect(rows[5]!.name).toBe(LOCAL_MIGRATIONS[5])
+    expect(rows[5]!.applied_at).not.toBeNull()
   })
 
   it('keeps old links readable, writable, and servable', async () => {

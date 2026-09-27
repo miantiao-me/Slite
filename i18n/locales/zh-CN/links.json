@@ -44,6 +44,10 @@
     },
     "form": {
       "url": "链接地址",
+      "url_description": "请输入完整链接，例如 https://example.com，最多 {max} 个字符。",
+      "url_required": "链接地址不能为空。",
+      "url_invalid": "链接格式无效，请输入完整链接，例如 https://example.com。",
+      "url_too_long": "链接长度为 {length} 个字符，超过上限 {max} 个字符。",
       "slug": "短链",
       "comment": "备注",
       "tags": "标签",
@@ -66,7 +70,7 @@
       "redirect_with_query_label": "携带查询参数跳转",
       "redirect_with_query_description": "将短链接的查询参数追加到目标 URL。优先级高于全局设置。",
       "cloaking_label": "启用链接伪装",
-      "cloaking_description": "在浏览器地址栏中显示短链接而非目标 URL。部分禁止 iframe 嵌入的网站可能无法生效。",
+      "cloaking_description": "在浏览器地址栏中显示短链接而非目标 URL。部分禁止 iframe 嵌入的网站可能无法生效。与反向代理互斥。",
       "unsafe_label": "标记为不安全",
       "unsafe_description": "跳转前显示警告页面，访客需确认后才能继续。",
       "password_label": "密码保护",
@@ -109,7 +113,9 @@
       "utm_clear": "清空",
       "utm_invalid_url": "请输入有效 URL 以预览并应用 UTM 参数。",
       "ai_og_generate": "生成 AI OpenGraph",
-      "duplicate_url_hint": "该 URL 已存在为 {shortLink}"
+      "duplicate_url_hint": "该 URL 已存在为 {shortLink}",
+      "proxy_label": "启用反向代理",
+      "proxy_description": "直接透明代理转发目标 URL 内容，不发生 301/302 重定向。适合配置订阅或 API 请求。与链接伪装互斥。"
     },
     "dialogs": {
       "discard": {

@@ -23,7 +23,7 @@ Authenticate requests by passing your site token in the `Authorization` header:
 Authorization: Bearer YOUR_SITE_TOKEN
 ```
 
-The token must match `NUXT_SITE_TOKEN` exactly and contain at least 8 characters. Administrative endpoints and all `/api/**` routes (except the public `GET /api/location` compatibility endpoint) reject requests lacking valid authentication with HTTP `401`.
+The token must match `NUXT_SITE_TOKEN` exactly and contain at least 8 characters. Administrative endpoints and all `/api/**` routes (except the public `GET /api/location` compatibility endpoint) reject requests lacking valid authentication with HTTP `401`. The [MCP endpoint](/integrations/#mcp-server) at `/api/mcp` uses the same token.
 
 ## CORS configuration
 
@@ -47,5 +47,6 @@ By default, cross-origin browser requests to `/api/**` are forbidden. For source
 | Optional AI   | `/api/link/ai`, `/api/link/og-ai`                                                          | AI-suggested short codes and OpenGraph text ([AI](/features/ai))                     |
 | Analytics     | `/api/stats/**`, `/api/logs/**`                                                            | Metrics, dimension summaries, and event logs ([Analytics](/features/analytics))      |
 | Utilities     | `/api/verify`, `/api/location`, `/api/upload/image`, `/api/backup`                         | Session verification, GeoIP lookups, file uploads, and link backups                  |
+| MCP           | `/api/mcp`                                                                                 | MCP Server — [Integrations](/integrations/#mcp-server)                               |
 
 For complete request and response schemas, inspect your instance's live `/_docs/scalar` interface.

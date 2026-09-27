@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { MAX_URL_LENGTH } from './link'
 
 function isHttpUrl(value: string): boolean {
   try {
@@ -12,13 +13,13 @@ function isHttpUrl(value: string): boolean {
 
 export const LinkCheckTargetSchema = z.object({
   slug: z.string().trim().min(1).max(2048),
-  url: z.string().trim().url().max(2048).refine(isHttpUrl, 'URL must use HTTP or HTTPS'),
+  url: z.string().trim().url().max(MAX_URL_LENGTH).refine(isHttpUrl, 'URL must use HTTP or HTTPS'),
 })
 
 export const LinkCheckRequestSchema = z.object({
-  cursor: z.string().trim().max(1024).optional(),
-  limit: z.coerce.number().int().min(1).max(10).default(6),
-  timeout: z.coerce.number().int().min(1).max(30).default(6),
+  cursor: z.string().trim().max(1024).optional().describe('Pagination cursor from a previous response.'),
+  limit: z.coerce.number().int().min(1).max(10).default(6).describe('Maximum number of links to check per page.'),
+  timeout: z.coerce.number().int().min(1).max(30).default(6).describe('Timeout in seconds for each link check.'),
 }).strict()
 
 export const LinkCheckConfigSchema = z.object({

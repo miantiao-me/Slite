@@ -38,17 +38,23 @@ AI capabilities are completely disabled until **both** `NUXT_AI_BASE_URL` and `N
 
 Settings applied at the frontend / UI level:
 
-| Variable                          | Default | Purpose                                                                                                                                     |
-| --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NUXT_PUBLIC_PREVIEW_MODE`        | `false` | Read-only demo mode: link edits and deletions are disabled, and new links expire automatically after 5 minutes.                             |
-| `NUXT_PUBLIC_SLUG_DEFAULT_LENGTH` | `6`     | Character length of auto-generated random short codes.                                                                                      |
-| `NUXT_PUBLIC_IMPORT_BATCH_LIMIT`  | `50`    | Dashboard import batch chunk size; each batch request sends at most half this number (default 25 records). Export page size is fixed at 50. |
+| Variable                          | Default | Purpose                                                                                                                                              |
+| --------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NUXT_PUBLIC_PREVIEW_MODE`        | `false` | Read-only demo mode: link edits and deletions are disabled, and new links expire automatically after 5 minutes.                                      |
+| `NUXT_PUBLIC_SLUG_DEFAULT_LENGTH` | `6`     | Character length of auto-generated random short codes.                                                                                               |
+| `NUXT_PUBLIC_IMPORT_BATCH_LIMIT`  | `50`    | Dashboard import batch chunk size; each batch request sends at most half this number (default 25 records). Export page size is fixed at 50.          |
+| `NUXT_PUBLIC_MAX_URL_LENGTH`      | `16384` | Maximum target URL length in characters (256-24000).                                                                                                 |
+| `NUXT_PUBLIC_HOME_URL`            | Empty   | Non-empty URL redirects `/`; empty shows the built-in Slite homepage.                                                                                |
+| `NUXT_PUBLIC_LINK_PROXY_ENABLED`  | `false` | `true` allows links to opt into [reverse proxy mode](/features/links#reverse-proxy-mode); when off, stored proxy links fall back to plain redirects. |
+
+`NUXT_PUBLIC_*` values are read when the process starts, so restart the Node.js process or recreate the Docker container after changing them.
+
+`NUXT_HOME_URL` is the deprecated name of `NUXT_PUBLIC_HOME_URL`. It still works, but rename it when you next change your settings.
 
 ## Optional runtime options
 
 | Variable                  | Default | Purpose                                                                                                         |
 | ------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| `NUXT_HOME_URL`           | Empty   | Redirect the root path `/` to this URL; when empty, shows the built-in Slite homepage.                          |
 | `NUXT_NOT_FOUND_REDIRECT` | Empty   | Destination URL for unknown short codes (**always HTTP 302**).                                                  |
 | `NUXT_SAFE_BROWSING_DOH`  | Empty   | DNS-over-HTTPS JSON endpoint for unsafe-link verification (e.g. `https://family.cloudflare-dns.com/dns-query`). |
 | `NUXT_WEBHOOK_URL`        | Empty   | HTTP(S) endpoint URL for asynchronous [click webhooks](/configuration/webhooks).                                |

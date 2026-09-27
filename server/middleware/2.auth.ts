@@ -19,6 +19,8 @@ export default eventHandler(async (event) => {
     return
   }
 
+  setResponseHeader(event, 'WWW-Authenticate', 'Bearer')
+
   if (token && token.length < 8) {
     throw createError({
       status: 401,

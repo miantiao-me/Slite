@@ -44,6 +44,10 @@
     },
     "form": {
       "url": "URL",
+      "url_description": "Introduza um URL completo, como https://example.com. Máximo de {max} caracteres.",
+      "url_required": "O URL é obrigatório.",
+      "url_invalid": "O formato do URL é inválido. Introduza um URL completo, como https://example.com.",
+      "url_too_long": "O URL tem {length} caracteres, mas o limite é {max}.",
       "slug": "Slug",
       "comment": "Comentário",
       "tags": "Etiquetas",
@@ -66,7 +70,7 @@
       "redirect_with_query_label": "Redirecionar com parâmetros de consulta",
       "redirect_with_query_description": "Anexar parâmetros de consulta do link curto ao URL de destino. Substitui a definição global.",
       "cloaking_label": "Ativar ocultação de link",
-      "cloaking_description": "Mostrar o teu link curto na barra de endereço do navegador em vez do URL de destino. Isto pode não funcionar em sites que bloqueiam a incorporação de iframes.",
+      "cloaking_description": "Mostrar o teu link curto na barra de endereço do navegador em vez do URL de destino. Isto pode não funcionar em sites que bloqueiam a incorporação de iframes. Não pode ser combinado com proxy inverso.",
       "unsafe_label": "Marcar como inseguro",
       "unsafe_description": "Mostrar uma página de aviso antes do redirecionamento. Os visitantes devem confirmar para continuar.",
       "password_label": "Proteção por palavra-passe",
@@ -109,7 +113,9 @@
       "utm_clear": "Limpar",
       "utm_invalid_url": "Introduza um URL válido para pré-visualizar e aplicar os parâmetros UTM.",
       "ai_og_generate": "Gerar OpenGraph da IA",
-      "duplicate_url_hint": "Este URL já existe como {shortLink}"
+      "duplicate_url_hint": "Este URL já existe como {shortLink}",
+      "proxy_label": "Ativar proxy inverso",
+      "proxy_description": "Encaminha de forma transparente o conteúdo do URL de destino sem redirecionamento 301/302. Ideal para assinaturas e APIs. Não pode ser combinado com ocultação de link."
     },
     "dialogs": {
       "discard": {

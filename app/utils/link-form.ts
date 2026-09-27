@@ -2,6 +2,28 @@ import type { DashboardLink, DashboardLinkFormData } from '@/types/dashboard-lin
 import { isMaskedLinkPassword } from '#shared/utils/link-password'
 import { date2unix, unix2date } from './time'
 
+export type LinkUrlValidationError
+  = | { kind: 'required' }
+    | { kind: 'invalid' }
+    | { kind: 'too_long', length: number }
+
+export function getLinkUrlValidationError(
+  value: unknown,
+  maxUrlLength: number,
+  optional = false,
+): LinkUrlValidationError | undefined {
+  if (typeof value !== 'string')
+    return { kind: 'invalid' }
+
+  const url = value.trim()
+  if (!url)
+    return optional ? undefined : { kind: 'required' }
+  if (url.length > maxUrlLength)
+    return { kind: 'too_long', length: url.length }
+
+  return URL.canParse(url) ? undefined : { kind: 'invalid' }
+}
+
 export function createLinkFormInitialValues(link: Partial<DashboardLink>): DashboardLinkFormData {
   return {
     url: link.url ?? '',
@@ -16,6 +38,7 @@ export function createLinkFormInitialValues(link: Partial<DashboardLink>): Dashb
     image: link.image ?? '',
     cloaking: link.cloaking ?? false,
     redirectWithQuery: link.redirectWithQuery ?? false,
+    proxy: link.proxy ?? false,
     password: link.password ?? '',
     unsafe: link.unsafe ?? false,
     geo: link.geo ? Object.entries(link.geo).map(([country, url]) => ({ country, url })) : [],
@@ -46,8 +69,10 @@ export function normalizeLinkFormSubmitPayload(value: DashboardLinkFormData, isE
     title: value.title || undefined,
     description: value.description || undefined,
     image: value.image || undefined,
+    // Exclusivity is enforced by the visible switches; a hidden stored proxy must not rewrite cloaking.
     cloaking: value.cloaking,
     redirectWithQuery: value.redirectWithQuery,
+    proxy: value.proxy,
     password,
     unsafe: isEdit ? value.unsafe : value.unsafe || undefined,
     geo: Object.keys(geo).length > 0 ? geo : undefined,

@@ -38,17 +38,23 @@ description: Slite 支持的全部环境变量——核心配置、可选 AI、�
 
 作用于前端页面与界面展示维度的设置：
 
-| 环境变量                          | 默认值  | 用途                                                                                       |
-| --------------------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `NUXT_PUBLIC_PREVIEW_MODE`        | `false` | 只读演示模式：禁止新建链接的编辑与删除，新建链接在 5 分钟后自动过期。                      |
-| `NUXT_PUBLIC_SLUG_DEFAULT_LENGTH` | `6`     | 自动随机生成短链码的字符长度。                                                             |
-| `NUXT_PUBLIC_IMPORT_BATCH_LIMIT`  | `50`    | 仪表盘导入分批大小；单次批量请求最多携带该数值的一半（默认 25 条）。导出分页固定为 50 条。 |
+| 环境变量                          | 默认值  | 用途                                                                                                        |
+| --------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `NUXT_PUBLIC_PREVIEW_MODE`        | `false` | 只读演示模式：禁止新建链接的编辑与删除，新建链接在 5 分钟后自动过期。                                       |
+| `NUXT_PUBLIC_SLUG_DEFAULT_LENGTH` | `6`     | 自动随机生成短链码的字符长度。                                                                              |
+| `NUXT_PUBLIC_IMPORT_BATCH_LIMIT`  | `50`    | 仪表盘导入分批大小；单次批量请求最多携带该数值的一半（默认 25 条）。导出分页固定为 50 条。                  |
+| `NUXT_PUBLIC_MAX_URL_LENGTH`      | `16384` | 目标 URL 最大字符数（256-24000）。                                                                          |
+| `NUXT_PUBLIC_HOME_URL`            | 空      | 非空则把 `/` 重定向到该 URL；空则显示 Slite 内置默认首页。                                                  |
+| `NUXT_PUBLIC_LINK_PROXY_ENABLED`  | `false` | `true` 时允许链接开启[反向代理模式](/zh-CN/features/links#反向代理模式)；关闭时存量代理链接回退为普通跳转。 |
+
+`NUXT_PUBLIC_*` 的值在进程启动时读取，修改后需重启 Node.js 进程或重建 Docker 容器。
+
+`NUXT_HOME_URL` 是 `NUXT_PUBLIC_HOME_URL` 的旧名称，目前仍然有效，建议下次调整配置时改成新名称。
 
 ## 可选运行时配置
 
 | 环境变量                  | 默认值 | 用途                                                                                                  |
 | ------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| `NUXT_HOME_URL`           | 空     | 将根路径 `/` 重定向至该 URL；留空时显示 Slite 内置默认首页。                                          |
 | `NUXT_NOT_FOUND_REDIRECT` | 空     | 未命中短链码的重定向目标 URL（**始终为 HTTP 302**）。                                                 |
 | `NUXT_SAFE_BROWSING_DOH`  | 空     | 用于不安全链接检测的 DNS-over-HTTPS JSON 端点（例如 `https://family.cloudflare-dns.com/dns-query`）。 |
 | `NUXT_WEBHOOK_URL`        | 空     | 异步[点击 Webhook](/zh-CN/configuration/webhooks) 接收端点 HTTP(S) 地址。                             |

@@ -51,7 +51,7 @@ Local development listens on `http://localhost:5483`. The container also listens
 }
 ```
 
-Required: `url`. Optional: `slug` (auto-generated when omitted), `comment`, `expiration` (unix seconds, must be in the future), `title`, `description`, `image` (URL returned by `POST /api/upload/image`, a multipart upload with `file` and `slug`), `apple` and `google` (device routing), `tags` (up to 10 tags, 1-32 characters each), `cloaking`, `redirectWithQuery`, `password`, `unsafe`, `geo` (country-code routing map). Country-based redirects execute when a GeoIP database is loaded; otherwise the default `url` is used.
+Required: `url`. Optional: `slug` (auto-generated when omitted), `comment`, `expiration` (unix seconds, must be in the future), `title`, `description`, `image` (URL returned by `POST /api/upload/image`, a multipart upload with `file` and `slug`), `apple` and `google` (device routing), `tags` (up to 10 tags, 1-32 characters each), `cloaking`, `redirectWithQuery`, `proxy` (reverse proxy mode; requires `NUXT_PUBLIC_LINK_PROXY_ENABLED=true`, mutually exclusive with `cloaking`), `password`, `unsafe`, `geo` (country-code routing map). Country-based redirects execute when a GeoIP database is loaded; otherwise the default `url` is used.
 
 When `NUXT_SAFE_BROWSING_DOH` is configured and `unsafe` is omitted, the server checks the URL through DoH and may mark it unsafe.
 
@@ -65,7 +65,7 @@ Returns `201` with `{ "link": { ... }, "shortLink": "https://your-domain/custom-
 
 ### Edit
 
-`PUT /api/link/edit` with `slug` (which link to edit) and `url` (required), plus any optional fields to update. Returns `201` with `{ link, shortLink }`; `404` when missing, `409` on concurrent modification. Send `"password": ""` to remove password protection.
+`PUT /api/link/edit` with `slug` (which link to edit) and `url` (required), plus any optional fields to update. Returns `201` with `{ link, shortLink }`; `404` when missing, `409` on concurrent modification. Omitted fields are cleared, so send the full record. Send `"password": ""` to remove password protection; omitting `password` keeps the stored one.
 
 ### Delete
 
@@ -85,7 +85,7 @@ Returns `{ "links": [...], "list_complete": false, "cursor": "next-cursor" }`. P
 
 ### Search, count, and tags
 
-- `GET /api/link/search?q=keyword` or `?url=https://example.com`; a `q` or `url` selector is required, otherwise an empty array is returned. Supports `tag`, `status`, and `limit` (max 1000).
+- `GET /api/link/search?q=keyword` or `?url=https://example.com`; a `q` or `url` selector is required, otherwise an empty array is returned. Supports `tag`, `status`, and `limit` (max 1000). `POST /api/link/search` accepts `{ "url": "https://example.com", "limit": 20 }` for an exact URL match kept out of the query string.
 - `GET /api/link/count?q=keyword` returns `{ "count": 3 }`.
 - `GET /api/link/tags` lists tags currently in use.
 

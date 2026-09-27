@@ -2,6 +2,7 @@ import type { Link } from '#shared/schemas/link'
 import { parsePath, withQuery } from 'ufo'
 import { AnalyticsUnavailableError } from '../database/analytics'
 import { lookupGeo } from '../services/geo'
+import { proxyLinkRequest } from '../services/link-proxy'
 import { requestClientIp } from '../utils/client-ip'
 import { selectGeoRedirectUrl } from '../utils/geo-redirect'
 
@@ -54,7 +55,11 @@ function hasOgConfig(link: Link): boolean {
 export default eventHandler(async (event) => {
   const { pathname: slug } = parsePath(event.path.replace(/^\/|\/$/g, ''))
   const { slugRegex, reserveSlug } = useAppConfig()
-  const { homeURL, caseSensitive, redirectWithQuery, redirectStatusCode, redirectNoStore } = useRuntimeConfig(event)
+  const runtimeConfig = useRuntimeConfig(event)
+  const { caseSensitive, redirectWithQuery, redirectStatusCode, redirectNoStore } = runtimeConfig
+  const { linkProxyEnabled } = runtimeConfig.public
+  // runtimeConfig.homeURL reads the deprecated NUXT_HOME_URL at runtime.
+  const homeURL = runtimeConfig.public.homeURL || runtimeConfig.homeURL
 
   if (event.path === '/' && homeURL)
     return sendRedirect(event, homeURL)
@@ -98,11 +103,31 @@ export default eventHandler(async (event) => {
       const deviceRedirectUrl = getDeviceRedirectUrl(userAgent, link)
       const targetUrl = buildTarget(deviceRedirectUrl ?? geoRedirectUrl ?? link.url)
 
+      // Reverse proxying is opt-in per link AND requires the instance flag
+      // (NUXT_PUBLIC_LINK_PROXY_ENABLED). With the flag off, stored proxy links
+      // keep their data and degrade to plain redirects.
+      const isProxyLink = !!link.proxy && linkProxyEnabled
+
+      // Header credentials come first so authenticated clients can stream
+      // JSON/binary bodies straight through: x-link-password authenticates and
+      // x-link-confirm: true carries the unsafe confirmation. Other POSTs are
+      // read as gate form submissions — on a proxied link a confirmed form is
+      // replayed upstream as a bodyless GET so the password never leaks.
+      const headerPassword = getHeader(event, 'x-link-password')
+      const headerConfirmed = getHeader(event, 'x-link-confirm') === 'true'
+      let formConfirmed = false
+
       // Password protection check
       if (link.password) {
-        const headerPassword = getHeader(event, 'x-link-password')
-
-        if (event.method === 'POST') {
+        if (headerPassword) {
+          if (!await verifyLinkPassword(headerPassword, link.password)) {
+            throw createError({ status: 403, statusText: 'Incorrect password' })
+          }
+          if (link.unsafe && !headerConfirmed) {
+            throw createError({ status: 403, statusText: 'Unsafe link: confirmation required (set x-link-confirm: true header)' })
+          }
+        }
+        else if (event.method === 'POST') {
           const body = await readBody(event)
           const submittedPassword = typeof body?.password === 'string' ? body.password : ''
 
@@ -112,17 +137,10 @@ export default eventHandler(async (event) => {
 
           // Password correct - show unsafe warning if needed
           if (link.unsafe && body?.confirm !== 'true') {
-            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, targetUrl, { password: submittedPassword, locale: getLocale() }))
+            return sendNoStoreHtml(generateUnsafeWarningHtml(slug, targetUrl, { password: submittedPassword || undefined, locale: getLocale() }))
           }
-        }
-        else if (headerPassword) {
-          if (!await verifyLinkPassword(headerPassword, link.password)) {
-            throw createError({ status: 403, statusText: 'Incorrect password' })
-          }
-          // Header-password path: check unsafe warning via x-link-confirm header
-          if (link.unsafe && getHeader(event, 'x-link-confirm') !== 'true') {
-            throw createError({ status: 403, statusText: 'Unsafe link: confirmation required (set x-link-confirm: true header)' })
-          }
+
+          formConfirmed = true
         }
         else {
           return sendNoStoreHtml(generatePasswordHtml(slug, { locale: getLocale() }))
@@ -130,10 +148,13 @@ export default eventHandler(async (event) => {
       }
 
       // Unsafe link warning (for links without password)
-      if (!link.password && link.unsafe) {
+      if (!link.password && link.unsafe && !headerConfirmed) {
         if (event.method === 'POST') {
           const body = await readBody(event)
-          if (body?.confirm !== 'true') {
+          if (body?.confirm === 'true') {
+            formConfirmed = true
+          }
+          else {
             return sendNoStoreHtml(generateUnsafeWarningHtml(slug, targetUrl, { locale: getLocale() }))
           }
         }
@@ -176,11 +197,19 @@ export default eventHandler(async (event) => {
         return sendRedirect(event, targetUrl, +redirectStatusCode)
       }
 
+      // Link previews use the configured OG metadata even for proxied links.
       if (isSocialBot(userAgent) && hasOgConfig(link)) {
         const baseUrl = requestOrigin(event)
         const html = generateOgHtml(link, targetUrl, baseUrl)
         setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
         return html
+      }
+
+      if (isProxyLink) {
+        return sendWebResponse(event, await proxyLinkRequest(event, targetUrl, {
+          method: formConfirmed ? 'GET' : event.method,
+          privateCache: !!(link.password || link.unsafe),
+        }))
       }
 
       if (link.cloaking) {

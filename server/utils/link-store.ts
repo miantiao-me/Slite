@@ -2,7 +2,7 @@ import type { H3Event } from 'h3'
 import type { Link } from '#shared/schemas/link'
 import type { ExpectedLinkVersion } from '../services/link-store/sqlite'
 import { getCachedLink, invalidateCachedLink, putCachedLink } from '../services/link-store/cache'
-import { sqliteCreateLink, sqliteDeleteLink, sqliteGetActiveLink, sqliteUpdateLink } from '../services/link-store/sqlite'
+import { sqliteCreateLink, sqliteCreateLinks, sqliteDeleteLink, sqliteGetActiveLink, sqliteUpdateLink } from '../services/link-store/sqlite'
 
 export {
   sqliteCountLinks as countLinks,
@@ -41,6 +41,33 @@ export async function createLink(event: H3Event, link: Link): Promise<boolean> {
   if (created)
     invalidateCachedLink(link.slug)
   return created
+}
+
+export type CreateLinksResult = { created: boolean } | { error: unknown }
+
+export async function createLinks(event: H3Event, links: Link[]): Promise<CreateLinksResult[]> {
+  let results: ReturnType<typeof sqliteCreateLinks>
+  try {
+    results = sqliteCreateLinks(event, links)
+  }
+  catch {
+    const fallbackResults: CreateLinksResult[] = []
+    for (const link of links) {
+      try {
+        fallbackResults.push({ created: await createLink(event, link) })
+      }
+      catch (error) {
+        fallbackResults.push({ error })
+      }
+    }
+    return fallbackResults
+  }
+
+  for (const [index, result] of results.entries()) {
+    if (result.created)
+      invalidateCachedLink(links[index]!.slug)
+  }
+  return results.map(result => ({ created: result.created }))
 }
 
 export async function updateLink(event: H3Event, link: Link, expected?: ExpectedLinkVersion): Promise<boolean> {

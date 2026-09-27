@@ -2,10 +2,11 @@ import { z } from 'zod'
 
 const listQueryLimit = +useRuntimeConfig().listQueryLimit
 
-export const QuerySchema = z.object({
+/** The access-log filters every analytics query shares. */
+export const FilterQuerySchema = z.object({
   id: z.string().optional(),
-  startAt: z.coerce.number().int().safe().optional(),
-  endAt: z.coerce.number().int().safe().optional(),
+  startAt: z.coerce.number().int().safe().optional().describe('Start of the window, unix seconds.'),
+  endAt: z.coerce.number().int().safe().optional().describe('End of the window, unix seconds.'),
   url: z.string().optional(),
   slug: z.string().optional(),
   referer: z.string().optional(),
@@ -19,7 +20,12 @@ export const QuerySchema = z.object({
   browserType: z.string().optional(),
   device: z.string().optional(),
   deviceType: z.string().optional(),
+})
+
+/** The filters plus a row limit for queries that actually paginate. */
+export const QuerySchema = FilterQuerySchema.extend({
   limit: z.coerce.number().int().safe().min(1).max(listQueryLimit).default(listQueryLimit),
 })
 
+export type FilterQuery = z.infer<typeof FilterQuerySchema>
 export type Query = z.infer<typeof QuerySchema>

@@ -5,7 +5,7 @@ import { useForm } from '@tanstack/vue-form'
 import { useDebounceFn } from '@vueuse/core'
 import { toast } from 'vue-sonner'
 import { z } from 'zod'
-import { nanoid, SlugSchema, UrlSchema } from '#shared/schemas/link'
+import { MAX_URL_LENGTH, nanoid, SlugSchema } from '#shared/schemas/link'
 
 const props = defineProps<{
   link: Partial<DashboardLink>
@@ -19,14 +19,12 @@ const emit = defineEmits<{
   'update:submitting': [value: boolean]
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const linksSearchStore = useDashboardLinksSearchStore()
 const requestUrl = useRequestURL()
 
-const urlValidator = UrlSchema
 const slugValidator = SlugSchema
 const commentValidator = z.string().max(500).optional()
-const optionalUrlValidator = z.string().trim().url().max(2048).optional().or(z.literal(''))
 
 const generateSlug = nanoid()
 
@@ -62,10 +60,23 @@ const tagsInput = useTemplateRef<{ commit: () => boolean }>('tagsInput')
 watch(isSubmitting, value => emit('update:submitting', value), { immediate: true })
 watch(isDirty, value => emit('update:dirty', value), { immediate: true })
 
-const validateUrl = makeZodValidator(urlValidator)
 const validateSlug = makeZodValidator(slugValidator)
 const validateComment = makeZodValidator(commentValidator)
-const validateOptionalUrl = makeZodValidator(optionalUrlValidator)
+
+function makeUrlValidator(optional: boolean) {
+  return ({ value }: { value: unknown }): string | undefined => {
+    const error = getLinkUrlValidationError(value, MAX_URL_LENGTH, optional)
+    if (!error)
+      return undefined
+    return t(`links.form.url_${error.kind}`, {
+      length: 'length' in error ? error.length.toLocaleString(locale.value) : '',
+      max: MAX_URL_LENGTH.toLocaleString(locale.value),
+    })
+  }
+}
+
+const validateUrl = makeUrlValidator(false)
+const validateOptionalUrl = makeUrlValidator(true)
 
 const utmBuilderOpen = ref(false)
 const advancedSections = ref<string[]>([])
@@ -168,7 +179,7 @@ function getInitialAdvancedSections() {
     sections.push('og')
   if (props.link.google || props.link.apple)
     sections.push('device')
-  if (props.link.expiration || props.link.cloaking || props.link.redirectWithQuery || props.link.password || props.link.unsafe)
+  if (props.link.expiration || props.link.cloaking || props.link.redirectWithQuery || props.link.proxy || props.link.password || props.link.unsafe)
     sections.push('link_settings')
   if (props.link.geo && Object.keys(props.link.geo).length)
     sections.push('geo')
@@ -272,6 +283,9 @@ defineExpose({ initializeRandomSlug })
               >
                 <ExternalLink aria-hidden="true" class="size-4" />
               </NuxtLink>
+            </FieldDescription>
+            <FieldDescription v-else-if="!isInvalid(field)">
+              {{ $t('links.form.url_description', { max: MAX_URL_LENGTH.toLocaleString(locale) }) }}
             </FieldDescription>
             <FieldError
               v-if="isInvalid(field)"

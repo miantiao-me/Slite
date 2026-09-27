@@ -165,25 +165,31 @@ The skill source is [`skills/slite/SKILL.md`](skills/slite/SKILL.md).
 
 ## 🧰 MCP
 
-Slite does not ship a native MCP server, but its OpenAPI documentation works with an OpenAPI-to-MCP proxy.
+Slite serves a built-in MCP endpoint at `POST /api/mcp`, using the official `@modelcontextprotocol/server` SDK v2, serving modern clients over the per-request transport and 2025-era clients over a stateless fallback with JSON responses.
 
-> Replace `OPENAPI_SPEC_URL` with your own instance URL. `API_KEY` uses the same value as `NUXT_SITE_TOKEN`.
+> Replace the domain below with your own instance, and use the `NUXT_SITE_TOKEN` from your instance's environment variables as the bearer token.
+
+```sh
+claude mcp add --transport http slite https://your-domain/api/mcp --header "Authorization: Bearer YOUR_SITE_TOKEN"
+```
+
+Any client that supports an HTTP transport with custom headers can connect the same way:
 
 ```json
 {
   "mcpServers": {
     "slite": {
-      "command": "uvx",
-      "args": ["mcp-openapi-proxy"],
-      "env": {
-        "OPENAPI_SPEC_URL": "https://your-domain/_docs/openapi.json",
-        "API_KEY": "YOUR_SITE_TOKEN",
-        "TOOL_WHITELIST": "/api/link"
+      "type": "http",
+      "url": "https://your-domain/api/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_SITE_TOKEN"
       }
     }
   }
 }
 ```
+
+See [Integrations — MCP Server](https://docs.slite.cool/integrations#mcp-server) for the full tool list and alternative OpenAPI-to-MCP setup.
 
 ## 🙋🏻 FAQs
 

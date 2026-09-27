@@ -61,6 +61,10 @@ beforeAll(async () => {
     redirectWithQuery: false,
     redirectStatusCode: '301',
     redirectNoStore: false,
+    public: {
+      homeURL: '',
+      linkProxyEnabled: false,
+    },
   }))
   vi.stubGlobal('getLink', mocks.getLink)
   vi.stubGlobal('collectAccessLog', mocks.collectAccessLog)

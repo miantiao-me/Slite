@@ -58,6 +58,55 @@ When social media crawlers request a link with preview metadata configured, Slit
 Cloaking embeds the destination website in a full-viewport iframe while the browser address bar displays the short link. Browsers and network inspectors still make direct connections to the target host. Websites that forbid embedding (using `X-Frame-Options` or `Content-Security-Policy`), as well as most authentication and payment flows, will refuse to load in cloaked mode.
 :::
 
+## Reverse proxy mode
+
+When reverse proxy mode is enabled on a link, visiting `/:slug` makes the Slite process fetch the destination URL and stream the response directly to the client without issuing HTTP 301/302 redirects.
+
+Slite intentionally uses a simple, single-request proxy model: it does not act as a full website proxy, does not assign separate domains or subdomains, and only forwards the single request made to the short code itself.
+
+### Suitable use cases
+
+- **API endpoints:** Forward API requests or webhooks with `Authorization` and custom headers passed through, returning responses directly to the caller.
+- **Shell install scripts:** Support one-line commands such as `curl -fsSL https://slite.example/install | bash`.
+- **Raw text and configurations:** Serve raw snippets, JSON payloads, or remote subscription configurations.
+- **Single file downloads:** Provide direct file downloads without bouncing visitors through external storage links.
+
+### Unsuitable use cases and limitations
+
+Reverse proxy mode is **not intended for standard multi-asset web pages**.
+
+Because proxying applies only to the single request to `/:slug`, Slite:
+
+- **Does not rewrite asset paths** inside HTML or CSS.
+- **Does not route subpaths** (requests to `/:slug/subpath` are not forwarded to the destination).
+- **Does not proxy runtime requests** such as dynamic `import()`, `fetch()`, or WebSockets.
+
+For example, if the destination page references `<script src="/assets/app.js">` or `<link rel="stylesheet" href="./style.css">`, the browser will request those files from your Slite domain (`https://slite.example/assets/app.js`), resulting in 404 errors, broken styles, and script failures. Only self-contained pages whose assets use absolute external URLs (such as CDN links) can render properly.
+
+### How to enable
+
+Reverse proxy mode is **off by default**.
+
+1. **Set the environment variable:** Add `NUXT_PUBLIC_LINK_PROXY_ENABLED=true` to the process environment.
+2. **Restart the process:** Restart the Node.js process or recreate the Docker container so the runtime configuration picks up the flag.
+
+This flag only controls resolution: when disabled, links configured with proxy mode simply fall back to standard HTTP redirects when visited. Proxy and cloaking are mutually exclusive; the dashboard switch enables one and turns the other off.
+
+### Security notes and protections
+
+::: warning Same-origin security risk
+Proxied responses are served under your Slite domain and execute in the **same origin without a CSP sandbox**.
+
+Any active upstream content (HTML, JavaScript, SVG) runs in the same origin as your Slite dashboard and can access cookies and `localStorage` (including dashboard site tokens). **Never proxy untrusted or unknown destinations.**
+:::
+
+Slite enforces the following built-in protections:
+
+- **Private target blocking:** Only public `http(s)` targets are allowed. Requests to `localhost`, IPv4 private/reserved ranges, and IPv6 `::`, `::1`, ULA, link-local, multicast, or `::ffff:` mapped addresses are blocked. Literal-IP checks cannot defend against DNS rebinding on hostname targets. Upstream redirects are followed automatically, and only the initial target is validated.
+- **Request header filtering:** Client `cookie`, `host`, hop-by-hop headers, `content-length`, `cf-*`, `x-forwarded-*`, `x-real-ip`, and `x-link-*` headers are stripped; `authorization` and other custom headers are forwarded. Slite automatically populates `x-forwarded-for` with the trusted client IP (respecting `NUXT_TRUST_PROXY` / `NUXT_CLIENT_IP_HEADER`), plus `x-forwarded-proto` and `x-forwarded-host`.
+- **Response header filtering:** Upstream hop-by-hop headers and `set-cookie` headers are stripped. Responses always include `X-Content-Type-Options: nosniff`.
+- **Protected link isolation:** When a visitor confirms a password or unsafe warning form, the upstream request is made within the same request as a bodyless GET, ensuring submitted passwords are never sent upstream. API clients can stream request bodies (JSON or binary) directly by passing `x-link-password` and `x-link-confirm: true` headers. Responses for password-protected or unsafe links are always marked `Cache-Control: private, no-store`.
+
 ## Server-side health check
 
 The **Dashboard → Check** tool (and the `/api/link/check` endpoint) probes target URLs directly from the Slite server (up to 10 URLs per batch, with timeouts between 1 and 30 seconds).
@@ -70,5 +119,5 @@ Tune instance-wide redirect behaviors through environment variables:
 
 - **Redirect status code:** Configure `NUXT_REDIRECT_STATUS_CODE` (default `301`; supports `302`, `307`, or `308`). Unknown short-link lookups always redirect with HTTP `302`.
 - **Cache control:** Set `NUXT_REDIRECT_NO_STORE=true` to send `Cache-Control: no-store` headers, preventing intermediate proxies and browsers from caching redirect responses.
-- **Root redirect:** Set `NUXT_HOME_URL` to redirect `/` to another website instead of rendering the Slite landing page.
+- **Root redirect:** Set `NUXT_PUBLIC_HOME_URL` to redirect `/` to another website instead of rendering the Slite landing page. The deprecated `NUXT_HOME_URL` name still works.
 - **Not-found redirect:** Set `NUXT_NOT_FOUND_REDIRECT` to send unmatched slugs to a custom 404 or fallback landing page.

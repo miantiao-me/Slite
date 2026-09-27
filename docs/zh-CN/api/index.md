@@ -23,7 +23,7 @@ Slite 提供经过认证保护的 REST API，用于处理仪表盘管理、短�
 Authorization: Bearer YOUR_SITE_TOKEN
 ```
 
-该令牌必须与实例配置的 `NUXT_SITE_TOKEN` 完全一致且长度不少于 8 个字符。除公开的 `GET /api/location` 兼容接口外，所有未携带有效令牌的 `/api/**` 请求均会被拦截并返回 HTTP `401`。
+该令牌必须与实例配置的 `NUXT_SITE_TOKEN` 完全一致且长度不少于 8 个字符。除公开的 `GET /api/location` 兼容接口外，所有未携带有效令牌的 `/api/**` 请求均会被拦截并返回 HTTP `401`。`/api/mcp` 的 [MCP 端点](/zh-CN/integrations/#mcp-服务端)使用相同的令牌。
 
 ## CORS 跨域配置
 
@@ -47,5 +47,6 @@ Authorization: Bearer YOUR_SITE_TOKEN
 | 可选 AI    | `/api/link/ai`, `/api/link/og-ai`                                                          | AI 建议短链码与社交分享预览（详见[可选 AI 支持](/zh-CN/features/ai)）         |
 | 访问分析   | `/api/stats/**`, `/api/logs/**`                                                            | 统计报表、维度汇总与访问事件日志（详见[访问分析](/zh-CN/features/analytics)） |
 | 实用工具   | `/api/verify`, `/api/location`, `/api/upload/image`, `/api/backup`                         | 鉴权校验、地理位置查询、图片上传与短链接备份快照                              |
+| MCP        | `/api/mcp`                                                                                 | MCP 服务端 — [第三方集成](/zh-CN/integrations/#mcp-服务端)                    |
 
 各接口的完整请求参数与响应格式，请直接访问实例运行时的 `/_docs/scalar` 查看。

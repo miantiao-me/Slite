@@ -1,6 +1,6 @@
 ---
 title: 第三方集成
-description: 将 Slite 连接到 AI 编码助手、OpenAPI 转 MCP 代理、浏览器扩展、Raycast、Apple 快捷指令及移动端应用。
+description: 通过内置 MCP 服务端将 Slite 接入 AI 编码助手，另有 OpenAPI 转 MCP 代理、浏览器扩展、Raycast、Apple 快捷指令及移动端应用。
 ---
 
 # 第三方集成
@@ -19,9 +19,58 @@ npx skills add miantiao-me/Slite
 
 Skill 配置文件位于代码仓库中的 [`skills/slite/SKILL.md`](https://github.com/miantiao-me/Slite/blob/master/skills/slite/SKILL.md)。
 
+## MCP 服务端
+
+Slite 在 `POST /api/mcp` 提供 Model Context Protocol 端点。它基于官方 [`@modelcontextprotocol/server`](https://www.npmjs.com/package/@modelcontextprotocol/server) SDK v2 入口，通过按请求创建的传输层服务现代客户端，并以无状态回退模式与 JSON 响应兼容 2025 年协议的旧客户端；SDK 自身完成协议版本协商，无需额外配置。
+
+该端点与 REST API 使用相同的 Bearer 令牌鉴权，无需单独凭证。详见 [API 身份认证](/zh-CN/api/#身份认证)。
+
+```sh
+claude mcp add --transport http slite https://your-domain/api/mcp --header "Authorization: Bearer YOUR_SITE_TOKEN"
+```
+
+任何支持 HTTP 传输与自定义请求头的 MCP 客户端都可以相同方式接入：
+
+```json
+{
+  "mcpServers": {
+    "slite": {
+      "type": "http",
+      "url": "https://your-domain/api/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_SITE_TOKEN"
+      }
+    }
+  }
+}
+```
+
+### 工具列表
+
+| 工具                     | 说明                                          |
+| ------------------------ | --------------------------------------------- |
+| `list_links`             | 按创建时间倒序列出短链接，支持游标分页。      |
+| `search_links`           | 按关键词或精确目标 URL 搜索短链接。           |
+| `get_link`               | 按短链码读取单条短链接。                      |
+| `count_links`            | 按关键词、URL、标签或过期状态统计短链接数量。 |
+| `list_tags`              | 列出所有在用标签及每个标签下的链接数。        |
+| `create_link`            | 创建短链接，未提供短链码时自动生成。          |
+| `update_link`            | 替换已有短链接的全部可写字段。                |
+| `upsert_link`            | 返回该短链码已有记录，不存在时创建。          |
+| `delete_link`            | 永久删除短链接。                              |
+| `check_links`            | 检测已存储链接的目标地址，按短链码游标分页。  |
+| `get_analytics_counters` | 访问量、独立访客与来源总数。                  |
+| `get_analytics_views`    | 按分钟、小时或天聚合的访问量与访客数。        |
+| `get_analytics_metrics`  | 单个访问日志维度的 Top 取值。                 |
+| `get_analytics_heatmap`  | 按星期与小时聚合的访问量与访客数。            |
+
+写入工具与 REST API 一样遵守 `NUXT_PUBLIC_PREVIEW_MODE`。对于 `update_link`，传入空 `password` 会清除密码保护，省略该字段则保留已存储的密码。
+
+该端点位于 `/api/` 之下，因此不会占用短链命名空间：短链码不能包含斜杠，任何短链接都无法遮蔽它，也无需预留短链码。升级不会夺走实例中已存在的短链码。
+
 ## OpenAPI 转 MCP
 
-虽然 Slite 本身未内置原生 Model Context Protocol（MCP）服务端，但可以通过标准的 OpenAPI 代理将实例的 API 开放给任何 MCP 客户端使用。
+当客户端无法直连内置端点（例如仅支持 stdio 服务端）时，可以使用 OpenAPI 代理作为替代方案。
 
 前置条件：安装 [`uv`](https://github.com/astral-sh/uv) 以便系统能够执行 `uvx` 命令。
 

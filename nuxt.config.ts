@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     redirectStatusCode: '301',
     redirectWithQuery: false,
     redirectNoStore: false,
+    // Deprecated NUXT_HOME_URL alias; kept so pre-public deployments keep redirecting `/`.
     homeURL: '',
     aiApiKey: '',
     aiBaseUrl: '',
@@ -44,6 +45,9 @@ export default defineNuxtConfig({
       previewMode: '',
       slugDefaultLength: '6',
       importBatchLimit: '50',
+      maxUrlLength: '16384',
+      homeURL: process.env.NUXT_HOME_URL || '',
+      linkProxyEnabled: false,
     },
   },
   routeRules: {

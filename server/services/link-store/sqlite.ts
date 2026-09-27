@@ -102,6 +102,7 @@ function rowToLink(row: LinkRow): Link {
     'google',
     'cloaking',
     'redirectWithQuery',
+    'proxy',
     'password',
     'unsafe',
     'geo',
@@ -152,6 +153,7 @@ function buildLinkValues(event: H3Event, link: Link, effectiveExpiresAt?: number
     google: link.google ?? null,
     cloaking: link.cloaking ?? null,
     redirectWithQuery: link.redirectWithQuery ?? null,
+    proxy: link.proxy ?? null,
     password: link.password ?? null,
     unsafe: link.unsafe ?? null,
     geo: link.geo ?? null,
@@ -188,6 +190,15 @@ export async function sqliteGetLinkWithMetadata(event: H3Event, slug: string): P
 export function sqliteCreateLink(event: H3Event, link: Link): { created: boolean, effectiveExpiresAt: number | null } {
   const db = getDatabase(event)
   return db.transaction(tx => createStoredLink(event, tx, link))
+}
+
+// Imports batch inserts in one transaction; a failing row aborts the batch and
+// the caller falls back to per-link inserts so one bad record cannot skip the rest.
+export function sqliteCreateLinks(event: H3Event, importedLinks: Link[]): { created: boolean, effectiveExpiresAt: number | null }[] {
+  if (!importedLinks.length)
+    return []
+  const db = getDatabase(event)
+  return db.transaction(tx => importedLinks.map(link => createStoredLink(event, tx, link)))
 }
 
 function replaceTags(db: Pick<ReturnType<typeof getDatabase>, 'insert' | 'delete'>, link: Link) {

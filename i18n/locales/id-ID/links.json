@@ -44,6 +44,10 @@
     },
     "form": {
       "url": "URL",
+      "url_description": "Masukkan URL lengkap, seperti https://example.com. Maksimal {max} karakter.",
+      "url_required": "URL wajib diisi.",
+      "url_invalid": "Format URL tidak valid. Masukkan URL lengkap, seperti https://example.com.",
+      "url_too_long": "URL memiliki {length} karakter, tetapi batasnya {max}.",
       "slug": "Slug",
       "comment": "Catatan",
       "tags": "Tag",
@@ -66,7 +70,7 @@
       "redirect_with_query_label": "Redirect dengan Parameter Query",
       "redirect_with_query_description": "Tambahkan parameter query ke URL tujuan.",
       "cloaking_label": "Aktifkan Cloaking Tautan",
-      "cloaking_description": "Tampilkan tautan pendek di bilah alamat browser, bukan URL tujuan. Mungkin tidak berfungsi pada situs yang memblokir penyematan iframe.",
+      "cloaking_description": "Tampilkan tautan pendek di bilah alamat browser, bukan URL tujuan. Mungkin tidak berfungsi pada situs yang memblokir penyematan iframe. Tidak dapat digabungkan dengan reverse proxy.",
       "unsafe_label": "Tandai Tidak Aman",
       "unsafe_description": "Tampilkan halaman peringatan sebelum mengalihkan. Pengunjung harus mengonfirmasi untuk melanjutkan.",
       "password_label": "Proteksi Kata Sandi",
@@ -109,7 +113,9 @@
       "utm_clear": "Bersihkan",
       "utm_invalid_url": "Masukkan URL valid untuk melihat pratinjau dan menerapkan parameter UTM.",
       "ai_og_generate": "Buat OpenGraph AI",
-      "duplicate_url_hint": "URL ini sudah ada sebagai {shortLink}"
+      "duplicate_url_hint": "URL ini sudah ada sebagai {shortLink}",
+      "proxy_label": "Aktifkan Reverse Proxy",
+      "proxy_description": "Meneruskan konten dari URL tujuan secara transparan tanpa pengalihan 301/302. Ideal untuk langganan konfigurasi dan API. Tidak dapat digabungkan dengan cloaking tautan."
     },
     "dialogs": {
       "discard": {

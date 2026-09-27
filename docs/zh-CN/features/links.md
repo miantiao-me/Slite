@@ -58,6 +58,55 @@ description: 自定义短链码、智能分流、有效期限、访问密码、�
 隐匿模式通过全屏 iframe 嵌入目标网页，浏览器地址栏保持显示短链接地址。浏览器的网络检查器依然能直接查看到目标主机的真实网络请求。设置了防嵌入响应头（如 `X-Frame-Options` 或 `Content-Security-Policy`）的网站，以及多数认证登录和支付页面，在隐匿模式下将无法正常加载。
 :::
 
+## 反向代理模式
+
+开启反向代理模式后，访问短链（`/:slug`）时，Slite 进程会直接请求目标 URL 并把响应流式返回给客户端，而不会返回 HTTP 301/302 重定向。
+
+Slite 采用极简代理设计，不做全站代理，也不使用额外域名或子域名，仅对短链本身的单次请求进行转发。
+
+### 适用场景
+
+- **API 接口：** 转发 API 请求或 Webhook，透传 `Authorization` 及自定义请求头，调用方直接获取接口响应。
+- **Shell 安装脚本：** 支持形如 `curl -fsSL https://slite.example/install | bash` 的一键安装命令。
+- **原始文本与配置：** 托管 Raw 文本片段、JSON 数据或远程客户端订阅配置。
+- **单文件下载：** 直链下载单个文件，无需跳转到原始存储或外部网盘地址。
+
+### 不适用场景与限制
+
+反向代理模式**不适合普通多资源网页**。
+
+代理只作用于短链本身这单次请求，Slite 具备以下明确边界：
+
+- **不改写资源路径：** 不会改写 HTML 或 CSS 中的相对路径与根路径引用。
+- **不处理子路径：** 请求 `/:slug/subpath` 不会被转发到目标地址。
+- **不转发运行时请求：** 不会代理网页运行时的动态 `import()`、`fetch()` 或 WebSocket 连接。
+
+例如，若代理的目标网页包含 `<script src="/assets/app.js">` 或 `<link rel="stylesheet" href="./style.css">`，浏览器在加载这些资源时会直接请求 Slite 自身的域名（如 `https://slite.example/assets/app.js`），导致 404 错误、样式丢失及脚本执行异常。只有所有静态资源均使用绝对外部 URL（例如完整 CDN 链接）的独立页面才可能正常展示。
+
+### 如何开启
+
+反向代理模式**默认关闭**。
+
+1. **设置环境变量：** 在进程环境中添加 `NUXT_PUBLIC_LINK_PROXY_ENABLED=true`。
+2. **重启进程：** 重启 Node.js 进程或重建 Docker 容器，使运行时配置读取新值。
+
+该配置仅影响访问行为：当未开启该环境变量时，已配置代理的短链在访问时会自动退化为普通的 HTTP 重定向。反向代理与网页隐匿互斥，仪表盘的开关启用其中一个时会自动关闭另一个。
+
+### 安全说明与防护机制
+
+::: warning 同源安全风险
+被代理的内容直接在你的 Slite 域名下提供，且**不包含 CSP sandbox 隔离**。
+
+这意味着上游返回的活动内容（HTML、JavaScript、SVG 等）会直接在 Slite 的**同源环境**中执行，可以读取该域名下的 Cookie 和 localStorage（包括管理后台的认证 Token）。**切勿代理不受信或不可控的目标。**
+:::
+
+Slite 保留了以下防护机制：
+
+- **私网目标拦截：** 仅允许代理公网 `http(s)` 目标，拦截 `localhost`、IPv4 私网与保留段，以及 IPv6 的 `::`、`::1`、ULA、链路本地、组播和 `::ffff:` 映射地址。字面 IP 检查无法防御针对域名的 DNS rebinding。上游重定向由运行时自动跟随，仅对初始目标进行公网校验。
+- **请求头过滤：** 客户端请求中的 `cookie`、`host`、hop-by-hop 头、`content-length`、`cf-*`、`x-forwarded-*`、`x-real-ip` 与 `x-link-*` 不会转发给上游；`authorization` 及其他自定义请求头会透传。Slite 会以可信的客户端 IP（遵循 `NUXT_TRUST_PROXY` / `NUXT_CLIENT_IP_HEADER`）自动补全 `x-forwarded-for`，并补全 `x-forwarded-proto` 和 `x-forwarded-host`。
+- **响应头过滤：** 剥离上游返回的 hop-by-hop 头与 `set-cookie`。响应始终附加 `X-Content-Type-Options: nosniff`。
+- **受保护链接隔离：** 密码验证或不安全警告表单确认后，会在同一次请求中以不带请求体的 GET 请求上游，表单中的密码绝不会发往上游。API 客户端可直接通过 `x-link-password` 和 `x-link-confirm: true` 请求头透传请求体（JSON/二进制）。带有密码或 unsafe 的链接响应统一附加 `Cache-Control: private, no-store`。
+
 ## 服务端健康检查
 
 **仪表盘 → Check** 工具（及 `/api/link/check` 接口）可从 Slite 服务端主动发起网络探测，验证目标地址的连通性（单次最多探测 10 个目标，超时范围 1–30 秒）。
@@ -70,5 +119,5 @@ description: 自定义短链码、智能分流、有效期限、访问密码、�
 
 - **重定向状态码：** 通过 `NUXT_REDIRECT_STATUS_CODE` 自定义成功命中的响应码（默认为 `301`，支持 `302`、`307`、`308`）。未匹配短链的跳转始终保持为 HTTP `302`。
 - **缓存控制：** 设置 `NUXT_REDIRECT_NO_STORE=true` 可返回 `Cache-Control: no-store` 标头，要求中间代理和客户端浏览器不缓存跳转响应。
-- **首页重定向：** 配置 `NUXT_HOME_URL` 可将根路径 `/` 跳转至指定外部网站，替代默认的 Slite 落地页。
+- **首页重定向：** 配置 `NUXT_PUBLIC_HOME_URL` 可将根路径 `/` 跳转至指定外部网站，替代默认的 Slite 落地页。旧名称 `NUXT_HOME_URL` 目前仍然有效。
 - **未命中重定向：** 配置 `NUXT_NOT_FOUND_REDIRECT` 可将未识别的短链统一导向指定的 404 说明页或备用站点。

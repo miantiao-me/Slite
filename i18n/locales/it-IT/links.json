@@ -44,6 +44,10 @@
     },
     "form": {
       "url": "URL",
+      "url_description": "Inserisci un URL completo, come https://example.com. Massimo {max} caratteri.",
+      "url_required": "L’URL è obbligatorio.",
+      "url_invalid": "Il formato dell’URL non è valido. Inserisci un URL completo, come https://example.com.",
+      "url_too_long": "L’URL contiene {length} caratteri, ma il limite è {max}.",
       "slug": "Slug",
       "comment": "Commento",
       "tags": "Tag",
@@ -66,7 +70,7 @@
       "redirect_with_query_label": "Reindirizza con Parametri Query",
       "redirect_with_query_description": "Aggiungi i parametri query dal link breve all'URL di destinazione. Sovrascrive l'impostazione globale.",
       "cloaking_label": "Abilita Mascheramento Link",
-      "cloaking_description": "Mostra il tuo link breve nella barra degli indirizzi del browser invece dell'URL di destinazione. Potrebbe non funzionare per siti che bloccano l'incorporamento iframe.",
+      "cloaking_description": "Mostra il tuo link breve nella barra degli indirizzi del browser invece dell'URL di destinazione. Potrebbe non funzionare per siti che bloccano l'incorporamento iframe. Non può essere combinato con il reverse proxy.",
       "unsafe_label": "Segna come non sicuro",
       "unsafe_description": "Mostra una pagina di avviso prima del reindirizzamento. I visitatori devono confermare per continuare.",
       "password_label": "Protezione con Password",
@@ -109,7 +113,9 @@
       "utm_clear": "Cancella",
       "utm_invalid_url": "Inserisci un URL valido per visualizzare l'anteprima e applicare i parametri UTM.",
       "ai_og_generate": "Genera OpenGraph AI",
-      "duplicate_url_hint": "Questo URL esiste già come {shortLink}"
+      "duplicate_url_hint": "Questo URL esiste già come {shortLink}",
+      "proxy_label": "Abilita Reverse Proxy",
+      "proxy_description": "Inoltra in modo trasparente il contenuto dell'URL di destinazione senza reindirizzamento 301/302. Ideale per abbonamenti e API. Non può essere combinato con il mascheramento link."
     },
     "dialogs": {
       "discard": {
