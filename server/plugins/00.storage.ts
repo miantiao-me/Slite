@@ -3,6 +3,7 @@ import { closeAnalytics, initializeAnalytics } from '../database/analytics'
 import { closeDatabase, initializeDatabase } from '../database/sqlite'
 import { closeGeo, initializeGeo } from '../services/geo'
 import { closeLinkCache, initializeLinkCache } from '../services/link-store/cache'
+import { startAutomaticLinkCleanup, stopAutomaticLinkCleanup } from '../utils/link-cleanup'
 
 // Nitro invokes plugins without awaiting them, so startup state is tracked with
 // a promise: synchronous validation still aborts startup, while every request
@@ -61,6 +62,7 @@ export default defineNitroPlugin((nitroApp) => {
       // Shutdown can race initialization; wait until every store has settled.
       await ready
       try {
+        stopAutomaticLinkCleanup()
         await stopAutomaticBackups()
         await drainWebhookDeliveries()
       }
@@ -120,6 +122,7 @@ export default defineNitroPlugin((nitroApp) => {
     // settles so a concurrent shutdown always observes and stops the timer.
     // A failed SQLite initialization never reaches this point: an unhealthy
     // process must not lazily reopen SQLite when the schedule fires.
+    startAutomaticLinkCleanup(config.expiredLinkRetentionDays)
     if (!config.disableAutoBackup)
       startAutomaticBackups()
     settleReady()

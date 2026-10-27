@@ -2,6 +2,7 @@ import type { H3Event } from 'h3'
 import type { Link } from '#shared/schemas/link'
 import type { ExpectedLinkVersion } from '../services/link-store/sqlite'
 import { getCachedLink, invalidateCachedLink, putCachedLink } from '../services/link-store/cache'
+import { sqliteDeleteExpiredLinks } from '../services/link-store/cleanup'
 import { sqliteCreateLink, sqliteCreateLinks, sqliteDeleteLink, sqliteGetActiveLink, sqliteUpdateLink } from '../services/link-store/sqlite'
 
 export {
@@ -13,6 +14,18 @@ export {
   sqliteSearchLinks as searchLinks,
   sqliteSnapshotAllLinks as snapshotAllAuthoritativeLinks,
 } from '../services/link-store/sqlite'
+
+export function deleteExpiredLinks(cutoff: number): number {
+  let deleted = 0
+  while (true) {
+    const slugs = sqliteDeleteExpiredLinks(cutoff)
+    if (!slugs.length)
+      return deleted
+    for (const slug of slugs)
+      invalidateCachedLink(slug)
+    deleted += slugs.length
+  }
+}
 
 export function normalizeSlug(event: H3Event, slug: string): string {
   return useRuntimeConfig(event).caseSensitive ? slug : slug.toLowerCase()

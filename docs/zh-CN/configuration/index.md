@@ -22,6 +22,12 @@ description: Slite 支持的全部环境变量——核心配置、可选 AI、�
 生产环境中请显式配置 `NUXT_SITE_TOKEN`，长度须至少为 8 个字符且不能包含空白字符。若留空或未设置，Slite 会在启动时生成仅在当前进程内存中存活的随机令牌。公开短链接可正常跳转，但仪表盘和受保护 API 将拒绝登录。
 :::
 
+### Expired link retention
+
+Set `NUXT_EXPIRED_LINK_RETENTION_DAYS=30` to permanently delete links once they have been expired for 30 days. Unset or empty disables cleanup. Only non-negative integers are accepted; `0` deletes expired links on the next run. Invalid values skip cleanup and log a warning.
+
+Cleanup runs every 24 hours after storage initialization, independently of automatic backups. The process must remain running for the scheduled interval. Active and permanent links are preserved; existing backups are unchanged.
+
 ## 可选 AI 功能
 
 在**同时**配置 `NUXT_AI_BASE_URL` 与 `NUXT_AI_MODEL` 之前，AI 功能完全处于停用状态。未配置时相关接口直接返回 HTTP `501`，且不发起任何外部请求。详见[可选 AI 支持](/zh-CN/features/ai)。

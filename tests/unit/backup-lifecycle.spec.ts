@@ -3,13 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   snapshot: vi.fn(),
+  cleanup: vi.fn(() => 0),
   write: vi.fn(),
   closeDatabase: vi.fn(),
   closeAnalytics: vi.fn(),
   closeLinkCache: vi.fn(),
 }))
 
-vi.mock('../../server/utils/link-store', () => ({ snapshotAllAuthoritativeLinks: mocks.snapshot }))
+vi.mock('../../server/utils/link-store', () => ({ snapshotAllAuthoritativeLinks: mocks.snapshot, deleteExpiredLinks: mocks.cleanup }))
 vi.mock('../../server/utils/files', () => ({
   writeStoredFile: mocks.write,
   storageDirectory: vi.fn(async () => '/unused-mocked-backups'),
@@ -65,6 +66,17 @@ describe('automatic backup lifecycle', () => {
     vi.advanceTimersByTime(86_400_000)
     expect(mocks.snapshot).toHaveBeenCalledTimes(disableAutoBackup ? 0 : 1)
     await hooks.close[0]!()
+  })
+
+  it('runs cleanup with backups disabled and stops it before closing storage', async () => {
+    vi.useFakeTimers()
+    const hooks = await loadStoragePlugin({ siteToken: 'test-token', dataDir: '/unused-mocked-data', disableAutoBackup: true, expiredLinkRetentionDays: '0' })
+    vi.advanceTimersByTime(86_400_000)
+    expect(mocks.cleanup).toHaveBeenCalledOnce()
+    expect(mocks.snapshot).not.toHaveBeenCalled()
+    await hooks.close[0]!()
+    vi.advanceTimersByTime(86_400_000)
+    expect(mocks.cleanup).toHaveBeenCalledOnce()
   })
 
   it('waits for an in-progress snapshot backup before closing SQLite', async () => {

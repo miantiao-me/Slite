@@ -22,6 +22,12 @@ All environment variables are strings. Boolean switches accept `true` and `false
 Always configure an explicit `NUXT_SITE_TOKEN` in production. It must be at least 8 characters long and contain no whitespace. Without it, Slite generates an ephemeral random token that exists only in memory for that process run. Public links will resolve, but the dashboard and protected API endpoints will refuse login.
 :::
 
+### Expired link retention
+
+Set `NUXT_EXPIRED_LINK_RETENTION_DAYS=30` to permanently delete links once they have been expired for 30 days. Unset or empty disables cleanup. Only non-negative integers are accepted; `0` deletes expired links on the next run. Invalid values skip cleanup and log a warning.
+
+Cleanup runs every 24 hours after storage initialization, independently of automatic backups. The process must remain running for the scheduled interval. Active and permanent links are preserved; existing backups are unchanged.
+
 ## Optional AI
 
 AI capabilities are completely disabled until **both** `NUXT_AI_BASE_URL` and `NUXT_AI_MODEL` are set. While unset, AI endpoints return HTTP `501` without making external requests. See [Optional AI](/features/ai).
