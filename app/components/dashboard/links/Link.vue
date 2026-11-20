@@ -187,7 +187,10 @@ function copyLink() {
               </Badge>
             </div>
 
-            <p v-if="summaryText" class="truncate text-sm">
+            <p v-if="noteText" class="truncate text-sm">
+              {{ noteText }}
+            </p>
+            <p v-if="summaryText" class="truncate text-sm text-muted-foreground">
               {{ summaryText }}
             </p>
           </div>

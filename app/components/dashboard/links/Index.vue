@@ -135,8 +135,66 @@ linksStore.onLinkUpdate(({ link, type }) => {
 </script>
 
 <template>
+  <div
+    v-if="links.length && linksStore.viewMode === 'list'" class="
+      overflow-x-auto
+    "
+  >
+    <Table>
+      <TableCaption class="sr-only">
+        {{ $t('links.group_title') }}
+      </TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{{ $t('links.table.link') }}</TableHead>
+          <TableHead
+            class="
+              hidden
+              sm:table-cell
+            "
+          >
+            {{ $t('links.table.date') }}
+          </TableHead>
+          <TableHead
+            class="
+              hidden
+              md:table-cell
+            "
+          >
+            {{ $t('links.table.stats') }}
+          </TableHead>
+          <TableHead
+            class="
+              hidden
+              lg:table-cell
+            "
+          >
+            {{ $t('links.table.url') }}
+          </TableHead>
+          <TableHead
+            class="
+              hidden
+              xl:table-cell
+            "
+          >
+            {{ $t('links.table.tags') }}
+          </TableHead>
+          <TableHead class="text-right">
+            {{ $t('links.table.actions') }}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <DashboardLinksLinkTableRow
+          v-for="link in links"
+          :key="link.slug"
+          :link="link"
+        />
+      </TableBody>
+    </Table>
+  </div>
   <section
-    v-if="links.length"
+    v-else-if="links.length"
     class="
       grid grid-cols-1 gap-4
       md:grid-cols-2

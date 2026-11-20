@@ -70,6 +70,7 @@ linksStore.onLinkUpdate(() => void fetchTags())
         md:ml-auto
       "
     >
+      <DashboardLinksViewMode />
       <DashboardLinksSort />
       <Select :model-value="linksStore.tag ?? allTagsValue" :disabled="loading" @update:model-value="selectTag">
         <SelectTrigger

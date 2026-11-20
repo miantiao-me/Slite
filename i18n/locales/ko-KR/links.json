@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "링크 필터",
       "status_label": "상태",
+      "view_label": "보기",
+      "cards": "카드",
+      "list": "목록",
       "active": "활성",
       "expired": "만료됨",
       "tag_label": "태그",
@@ -41,6 +44,14 @@
       "visits": "방문 {count}회",
       "visitors": "방문자 {count}명",
       "referers": "유입 경로 {count}개"
+    },
+    "table": {
+      "link": "링크",
+      "date": "날짜",
+      "stats": "통계",
+      "url": "URL",
+      "tags": "태그",
+      "actions": "작업"
     },
     "form": {
       "url": "URL",
