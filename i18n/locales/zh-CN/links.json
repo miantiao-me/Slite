@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "链接筛选",
       "status_label": "状态",
+      "view_label": "视图",
+      "cards": "卡片",
+      "list": "列表",
       "active": "有效",
       "expired": "已过期",
       "tag_label": "标签",
@@ -41,6 +44,14 @@
       "visits": "{count} 次访问",
       "visitors": "{count} 位访客",
       "referers": "{count} 个来源"
+    },
+    "table": {
+      "link": "链接",
+      "date": "日期",
+      "stats": "统计",
+      "url": "目标 URL",
+      "tags": "标签",
+      "actions": "操作"
     },
     "form": {
       "url": "链接地址",

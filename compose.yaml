@@ -1,9 +1,9 @@
 services:
   slite:
-    # Pull the released image by default; `docker compose up --build` builds it
-    # from the local Dockerfile and tags it with the same reference.
-    image: ghcr.io/miantiao-me/slite:latest
-    build: .
+    image: slite:local
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     init: true
     env_file:

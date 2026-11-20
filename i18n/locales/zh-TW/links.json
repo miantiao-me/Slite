@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "連結篩選",
       "status_label": "狀態",
+      "view_label": "檢視",
+      "cards": "卡片",
+      "list": "清單",
       "active": "有效",
       "expired": "已過期",
       "tag_label": "標籤",
@@ -41,6 +44,14 @@
       "visits": "{count} 次造訪",
       "visitors": "{count} 位訪客",
       "referers": "{count} 個來源"
+    },
+    "table": {
+      "link": "連結",
+      "date": "日期",
+      "stats": "統計",
+      "url": "目標 URL",
+      "tags": "標籤",
+      "actions": "操作"
     },
     "form": {
       "url": "連結地址",

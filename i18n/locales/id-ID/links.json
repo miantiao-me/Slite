@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "Filter tautan",
       "status_label": "Status",
+      "view_label": "Tampilan",
+      "cards": "Kartu",
+      "list": "Daftar",
       "active": "Aktif",
       "expired": "Kedaluwarsa",
       "tag_label": "Tag",
@@ -41,6 +44,14 @@
       "visits": "{count} kunjungan",
       "visitors": "{count} pengunjung",
       "referers": "{count} perujuk"
+    },
+    "table": {
+      "link": "Tautan",
+      "date": "Tanggal",
+      "stats": "Statistik",
+      "url": "URL",
+      "tags": "Tag",
+      "actions": "Tindakan"
     },
     "form": {
       "url": "URL",

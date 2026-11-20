@@ -2,6 +2,8 @@ import type { Link, LinkFormData, LinkListResponse, LinkSearchItem } from '@/typ
 
 export type DashboardLinkStatus = 'active' | 'expired'
 
+export type DashboardLinkViewMode = 'cards' | 'list'
+
 export type DashboardLink = Link & {
   tags?: string[]
 }

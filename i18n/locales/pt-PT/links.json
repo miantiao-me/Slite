@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "Filtros de links",
       "status_label": "Estado",
+      "view_label": "Visualização",
+      "cards": "Cartões",
+      "list": "Lista",
       "active": "Ativos",
       "expired": "Expirados",
       "tag_label": "Etiqueta",
@@ -41,6 +44,14 @@
       "visits": "{count} visitas",
       "visitors": "{count} visitantes",
       "referers": "{count} referências"
+    },
+    "table": {
+      "link": "Link",
+      "date": "Data",
+      "stats": "Estatísticas",
+      "url": "URL",
+      "tags": "Etiquetas",
+      "actions": "Ações"
     },
     "form": {
       "url": "URL",

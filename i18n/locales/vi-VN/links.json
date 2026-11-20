@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "Bộ lọc liên kết",
       "status_label": "Trạng thái",
+      "view_label": "Chế độ xem",
+      "cards": "Thẻ",
+      "list": "Danh sách",
       "active": "Còn hiệu lực",
       "expired": "Đã hết hạn",
       "tag_label": "Thẻ",
@@ -41,6 +44,14 @@
       "visits": "{count} lượt truy cập",
       "visitors": "{count} khách",
       "referers": "{count} nguồn giới thiệu"
+    },
+    "table": {
+      "link": "Liên kết",
+      "date": "Ngày",
+      "stats": "Thống kê",
+      "url": "URL",
+      "tags": "Thẻ",
+      "actions": "Thao tác"
     },
     "form": {
       "url": "URL",

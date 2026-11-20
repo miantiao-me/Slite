@@ -1,5 +1,5 @@
 import type { Link, LinkUpdateType } from '@/types'
-import type { DashboardLinkStatus } from '@/types/dashboard-links'
+import type { DashboardLinkStatus, DashboardLinkViewMode } from '@/types/dashboard-links'
 import type { DashboardLinkSort, LinksQueryState } from '@/utils/dashboard-query'
 import { createEventHook, tryOnScopeDispose } from '@vueuse/core'
 import { ref } from 'vue'
@@ -13,6 +13,7 @@ export interface LinkUpdateEvent {
 export const useDashboardLinksStore = defineStore('dashboard-links', () => {
   const sortBy = ref<DashboardLinkSort>('newest')
   const status = ref<DashboardLinkStatus>('active')
+  const viewMode = ref<DashboardLinkViewMode>('cards')
   const tag = ref<string>()
 
   const showLinkEditor = ref(false)
@@ -49,6 +50,7 @@ export const useDashboardLinksStore = defineStore('dashboard-links', () => {
   return {
     sortBy,
     status,
+    viewMode,
     tag,
     showLinkEditor,
     editingLink,

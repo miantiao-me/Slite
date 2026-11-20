@@ -29,6 +29,9 @@
     "filters": {
       "aria_label": "Link filters",
       "status_label": "Status",
+      "view_label": "View mode",
+      "cards": "Cards",
+      "list": "List",
       "active": "Active",
       "expired": "Expired",
       "tag_label": "Tag",
@@ -41,6 +44,14 @@
       "visits": "{count} visits",
       "visitors": "{count} visitors",
       "referers": "{count} referers"
+    },
+    "table": {
+      "link": "Link",
+      "date": "Date",
+      "stats": "Stats",
+      "url": "URL",
+      "tags": "Tags",
+      "actions": "Actions"
     },
     "form": {
       "url": "URL",
